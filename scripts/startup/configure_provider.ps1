@@ -57,6 +57,16 @@ if ($env:OPENCLAW_BIN -and $env:OPENCLAW_BIN.Trim() -ne "") {
   exit 1
 }
 
+if (-not (Get-Command pnpm -ErrorAction SilentlyContinue)) {
+  if (Get-Command npm -ErrorAction SilentlyContinue) {
+    Write-Host "pnpm not found. Installing via npm..."
+    npm install -g pnpm
+  } else {
+    Write-Error "未找到 pnpm，且 npm 不可用。请先安装 Node.js (包含 npm)。"
+    exit 1
+  }
+}
+
 $OpenclawPrefix = @()
 if ($OpenclawCmd.Length -gt 1) {
   $OpenclawPrefix = $OpenclawCmd[1..($OpenclawCmd.Length-1)]

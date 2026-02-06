@@ -67,7 +67,11 @@ if (-not $Token -or $Token.Trim().Length -eq 0) {
 }
 
 Require-Command node "Install Node.js (https://nodejs.org/)"
-Require-Command pnpm "Install pnpm: npm install -g pnpm"
+Require-Command npm "Install Node.js (https://nodejs.org/)"
+if (-not (Get-Command pnpm -ErrorAction SilentlyContinue)) {
+  Write-Host "pnpm not found. Installing via npm..."
+  npm install -g pnpm
+}
 Require-Command python "Install Python 3 (https://www.python.org/)"
 
 if (-not (Get-Command cloudflared -ErrorAction SilentlyContinue)) {

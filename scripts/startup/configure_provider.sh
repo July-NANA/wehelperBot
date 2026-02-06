@@ -43,6 +43,16 @@ else
   exit 1
 fi
 
+if ! command -v pnpm >/dev/null 2>&1; then
+  if command -v npm >/dev/null 2>&1; then
+    echo "pnpm not found. Installing via npm..."
+    npm install -g pnpm
+  else
+    echo "未找到 pnpm，且 npm 不可用。请先安装 Node.js (包含 npm)。" >&2
+    exit 1
+  fi
+fi
+
 show_usage() {
   cat <<'USAGE'
 Usage: openclaw/scripts/startup/configure_provider.sh [--provider <id>] [--auth <token|api-key|oauth>] [--api-key <key>] [--token <token>] [--force]

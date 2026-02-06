@@ -93,7 +93,11 @@ require_cmd() {
 }
 
 require_cmd node "Install Node.js (https://nodejs.org/)"
-require_cmd pnpm "Install pnpm: npm install -g pnpm"
+require_cmd npm "Install Node.js (https://nodejs.org/)"
+if ! command -v pnpm >/dev/null 2>&1; then
+  echo "pnpm not found. Installing via npm..."
+  npm install -g pnpm
+fi
 require_cmd python "Install Python 3 (https://www.python.org/)"
 
 if ! command -v cloudflared >/dev/null 2>&1; then
