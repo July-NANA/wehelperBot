@@ -1,7 +1,33 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+find_openclaw_dir() {
+  local dir="$SCRIPT_DIR"
+  local i
+  for i in 1 2 3 4 5 6; do
+    if [[ -f "$dir/openclaw/package.json" ]]; then
+      echo "$dir/openclaw"
+      return 0
+    fi
+    if [[ -f "$dir/package.json" ]] && grep -q '"name"[[:space:]]*:[[:space:]]*"openclaw"' "$dir/package.json"; then
+      echo "$dir"
+      return 0
+    fi
+    dir="$(cd "$dir/.." && pwd)"
+  done
+  return 1
+}
+
+OPENCLAW_DIR="${OPENCLAW_ROOT:-}"
+if [[ -z "$OPENCLAW_DIR" ]]; then
+  OPENCLAW_DIR="$(find_openclaw_dir || true)"
+fi
+if [[ -z "$OPENCLAW_DIR" ]]; then
+  echo "无法定位 OpenClaw 目录。请设置 OPENCLAW_ROOT 指向包含 package.json 的 OpenClaw 目录。" >&2
+  exit 1
+fi
 
 PORT=18789
 SKIP_BUILD=0
@@ -76,12 +102,53 @@ if ! command -v cloudflared >/dev/null 2>&1; then
   echo "Install (Linux): https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation"
 fi
 
-cd "$ROOT_DIR/openclaw"
+cd "$OPENCLAW_DIR"
+
+OPENCLAW_CMD=()
+if [[ -n "${OPENCLAW_BIN:-}" ]]; then
+  OPENCLAW_CMD=($OPENCLAW_BIN)
+elif command -v openclaw >/dev/null 2>&1; then
+  OPENCLAW_CMD=(openclaw)
+elif command -v pnpm >/dev/null 2>&1; then
+  OPENCLAW_CMD=(pnpm openclaw --)
+else
+  echo "未找到 openclaw 或 pnpm，请先安装。" >&2
+  exit 1
+fi
+
+if [[ ! -d "node_modules" ]]; then
+  pnpm install
+fi
+
+provider_configured() {
+  local json
+  json="$("${OPENCLAW_CMD[@]}" models status --json 2>/dev/null || true)"
+  if [[ -z "$json" ]]; then
+    return 1
+  fi
+  node -e '
+    const fs = require("fs");
+    try {
+      const data = JSON.parse(fs.readFileSync(0,"utf8"));
+      const oauth = (data.auth && data.auth.oauth && data.auth.oauth.profiles) || [];
+      const providers = (data.auth && data.auth.providers) || [];
+      const oauthOk = oauth.some(p => (p.type === "oauth" || p.type === "token") && (p.expiresAt || 0) > Date.now());
+      const apiKeyOk = providers.some(p => (p.profiles && p.profiles.apiKey || 0) > 0);
+      process.exit(oauthOk || apiKeyOk ? 0 : 1);
+    } catch {
+      process.exit(1);
+    }
+  ' <<<"$json"
+}
+
+if ! provider_configured; then
+  echo "未检测到已配置的 provider，将进入配置流程..."
+  "$SCRIPT_DIR/configure_provider.sh"
+fi
 
 if [[ "$SKIP_BUILD" -eq 0 ]]; then
-  pnpm install
   pnpm ui:build
   pnpm build
 fi
 
-OPENCLAW_GATEWAY_TOKEN="$GATEWAY_TOKEN" pnpm openclaw gateway --port "$PORT" --verbose --allow-unconfigured --token "$GATEWAY_TOKEN"
+OPENCLAW_GATEWAY_TOKEN="$GATEWAY_TOKEN" "${OPENCLAW_CMD[@]}" gateway --port "$PORT" --verbose --allow-unconfigured --token "$GATEWAY_TOKEN"

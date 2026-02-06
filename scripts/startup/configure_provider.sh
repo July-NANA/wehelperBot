@@ -1,13 +1,41 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+find_openclaw_dir() {
+  local dir="$SCRIPT_DIR"
+  local i
+  for i in 1 2 3 4 5 6; do
+    if [[ -f "$dir/openclaw/package.json" ]]; then
+      echo "$dir/openclaw"
+      return 0
+    fi
+    if [[ -f "$dir/package.json" ]] && grep -q '"name"[[:space:]]*:[[:space:]]*"openclaw"' "$dir/package.json"; then
+      echo "$dir"
+      return 0
+    fi
+    dir="$(cd "$dir/.." && pwd)"
+  done
+  return 1
+}
+
+OPENCLAW_DIR="${OPENCLAW_ROOT:-}"
+if [[ -z "$OPENCLAW_DIR" ]]; then
+  OPENCLAW_DIR="$(find_openclaw_dir || true)"
+fi
+if [[ -z "$OPENCLAW_DIR" ]]; then
+  echo "无法定位 OpenClaw 目录。请设置 OPENCLAW_ROOT 指向包含 package.json 的 OpenClaw 目录。" >&2
+  exit 1
+fi
+
 OPENCLAW_BIN="${OPENCLAW_BIN:-}"
 if [[ -n "$OPENCLAW_BIN" ]]; then
   OPENCLAW_CMD=($OPENCLAW_BIN)
 elif command -v openclaw >/dev/null 2>&1; then
   OPENCLAW_CMD=(openclaw)
 elif command -v pnpm >/dev/null 2>&1; then
-  OPENCLAW_CMD=(pnpm openclaw)
+  OPENCLAW_CMD=(pnpm openclaw --)
 else
   echo "未找到 openclaw 或 pnpm，请先安装。" >&2
   exit 1
@@ -38,6 +66,8 @@ Examples:
   ./openclaw/scripts/startup/configure_provider.sh --provider qwen-portal --auth oauth
 USAGE
 }
+
+cd "$OPENCLAW_DIR"
 
 provider=""
 auth=""

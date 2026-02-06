@@ -7,13 +7,49 @@ Param(
   [switch]$Force
 )
 
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+
+function Find-OpenclawDir {
+  param([string]$StartDir)
+  $dir = $StartDir
+  for ($i = 0; $i -lt 6; $i++) {
+    $candidate = Join-Path $dir "openclaw\package.json"
+    if (Test-Path $candidate) {
+      return (Split-Path -Parent $candidate)
+    }
+    $pkg = Join-Path $dir "package.json"
+    if (Test-Path $pkg) {
+      try {
+        $json = Get-Content $pkg -Raw | ConvertFrom-Json
+        if ($json.name -eq "openclaw") {
+          return $dir
+        }
+      } catch {
+      }
+    }
+    $parent = Split-Path -Parent $dir
+    if ($parent -eq $dir) { break }
+    $dir = $parent
+  }
+  return $null
+}
+
+$OpenclawDir = $env:OPENCLAW_ROOT
+if (-not $OpenclawDir -or $OpenclawDir.Trim() -eq "") {
+  $OpenclawDir = Find-OpenclawDir -StartDir $ScriptDir
+}
+if (-not $OpenclawDir) {
+  Write-Error "无法定位 OpenClaw 目录。请设置 OPENCLAW_ROOT 指向包含 package.json 的 OpenClaw 目录。"
+  exit 1
+}
+
 $OpenclawCmd = @()
 if ($env:OPENCLAW_BIN -and $env:OPENCLAW_BIN.Trim() -ne "") {
   $OpenclawCmd = $env:OPENCLAW_BIN.Split(" ", [System.StringSplitOptions]::RemoveEmptyEntries)
 } elseif (Get-Command openclaw -ErrorAction SilentlyContinue) {
   $OpenclawCmd = @("openclaw")
 } elseif (Get-Command pnpm -ErrorAction SilentlyContinue) {
-  $OpenclawCmd = @("pnpm","openclaw")
+  $OpenclawCmd = @("pnpm","openclaw","--")
 } else {
   Write-Error "未找到 openclaw 或 pnpm，请先安装。"
   exit 1
@@ -26,7 +62,12 @@ if ($OpenclawCmd.Length -gt 1) {
 
 function Invoke-Openclaw {
   param([string[]]$Args)
-  & $OpenclawCmd[0] @OpenclawPrefix @Args
+  Push-Location $OpenclawDir
+  try {
+    & $OpenclawCmd[0] @OpenclawPrefix @Args
+  } finally {
+    Pop-Location
+  }
 }
 
 function Show-Usage {
