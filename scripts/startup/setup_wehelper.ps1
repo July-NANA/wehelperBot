@@ -18,6 +18,25 @@ function Require-Command {
   }
 }
 
+function Ensure-Node {
+  if (Get-Command node -ErrorAction SilentlyContinue) { return }
+  Write-Host "Missing dependency: node"
+  if (Get-Command winget -ErrorAction SilentlyContinue) {
+    Write-Host "Attempting to install Node.js LTS via winget..."
+    winget install -e --id OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements
+  } elseif (Get-Command choco -ErrorAction SilentlyContinue) {
+    Write-Host "Attempting to install Node.js LTS via choco..."
+    choco install nodejs-lts -y
+  } else {
+    Write-Host "Fix: Install Node.js (https://nodejs.org/)"
+    exit 1
+  }
+  if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+    Write-Host "Node.js install did not complete. Please install manually from https://nodejs.org/"
+    exit 1
+  }
+}
+
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 function Find-OpenclawDir {
@@ -66,7 +85,7 @@ if (-not $Token -or $Token.Trim().Length -eq 0) {
   }
 }
 
-Require-Command node "Install Node.js (https://nodejs.org/)"
+Ensure-Node
 Require-Command npm "Install Node.js (https://nodejs.org/)"
 if (-not (Get-Command pnpm -ErrorAction SilentlyContinue)) {
   Write-Host "pnpm not found. Installing via npm..."

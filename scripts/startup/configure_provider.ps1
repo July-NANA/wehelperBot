@@ -34,6 +34,25 @@ function Find-OpenclawDir {
   return $null
 }
 
+function Ensure-Node {
+  if (Get-Command node -ErrorAction SilentlyContinue) { return }
+  Write-Host "Missing dependency: node"
+  if (Get-Command winget -ErrorAction SilentlyContinue) {
+    Write-Host "Attempting to install Node.js LTS via winget..."
+    winget install -e --id OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements
+  } elseif (Get-Command choco -ErrorAction SilentlyContinue) {
+    Write-Host "Attempting to install Node.js LTS via choco..."
+    choco install nodejs-lts -y
+  } else {
+    Write-Error "未找到 Node.js。请先安装：https://nodejs.org/"
+    exit 1
+  }
+  if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+    Write-Error "Node.js 安装未完成，请手动安装：https://nodejs.org/"
+    exit 1
+  }
+}
+
 $OpenclawDir = $env:OPENCLAW_ROOT
 if (-not $OpenclawDir -or $OpenclawDir.Trim() -eq "") {
   $OpenclawDir = Find-OpenclawDir -StartDir $ScriptDir
@@ -42,6 +61,8 @@ if (-not $OpenclawDir) {
   Write-Error "无法定位 OpenClaw 目录。请设置 OPENCLAW_ROOT 指向包含 package.json 的 OpenClaw 目录。"
   exit 1
 }
+
+Ensure-Node
 
 $OpenclawCmd = @()
 if ($env:OPENCLAW_BIN -and $env:OPENCLAW_BIN.Trim() -ne "") {
@@ -83,8 +104,8 @@ function Invoke-Openclaw {
 }
 
 function Show-Usage {
-@"
-Usage: openclaw\scripts\startup\configure_provider.ps1 [-Provider <id>] [-Auth <token|api-key|oauth>] [-ApiKey <key>] [-Token <token>] [-Force]
+@'
+Usage: openclaw\scripts\startup\configure_provider.ps1 [-Provider ID] [-Auth token|api-key|oauth] [-ApiKey KEY] [-Token TOKEN] [-Force]
 
 Providers (common):
   anthropic      (token or api-key)
@@ -101,11 +122,11 @@ Providers (common):
   minimax-api-lightning (api-key)
 
 Examples:
-  .\openclaw\scripts\startup\configure_provider.ps1 -Provider anthropic -Auth token -Token "<setup-token>"
-  .\openclaw\scripts\startup\configure_provider.ps1 -Provider openai -Auth api-key -ApiKey "<key>"
+  .\openclaw\scripts\startup\configure_provider.ps1 -Provider anthropic -Auth token -Token "setup-token"
+  .\openclaw\scripts\startup\configure_provider.ps1 -Provider openai -Auth api-key -ApiKey "key"
   .\openclaw\scripts\startup\configure_provider.ps1 -Provider openai-codex -Auth oauth
   .\openclaw\scripts\startup\configure_provider.ps1 -Provider qwen-portal -Auth oauth
-"@
+'@
 }
 
 function Run-Onboard-ApiKey {

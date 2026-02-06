@@ -110,6 +110,7 @@ http://127.0.0.1:18789/
 依赖检查：
 
 - 必需：`node`、`pnpm`、`python`
+  - Windows 脚本会尝试自动安装 Node.js（优先 `winget`，其次 `choco`）。若失败会提示手动安装。
 - 可选：`cloudflared`（缺失仅提示，不阻断）
 
 ### Windows (PowerShell)
