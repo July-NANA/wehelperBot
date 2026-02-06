@@ -88,6 +88,24 @@ if (-not (Get-Command pnpm -ErrorAction SilentlyContinue)) {
   }
 }
 
+$UsingLocalOpenclaw = $true
+if ($OpenclawCmd.Length -eq 1 -and $OpenclawCmd[0] -eq "openclaw") {
+  $UsingLocalOpenclaw = $false
+}
+
+if ($UsingLocalOpenclaw) {
+  $nodeModules = Join-Path $OpenclawDir "node_modules"
+  if (-not (Test-Path $nodeModules)) {
+    Write-Host "Installing workspace dependencies (pnpm install)..."
+    Push-Location $OpenclawDir
+    try {
+      pnpm install
+    } finally {
+      Pop-Location
+    }
+  }
+}
+
 $OpenclawPrefix = @()
 if ($OpenclawCmd.Length -gt 1) {
   $OpenclawPrefix = $OpenclawCmd[1..($OpenclawCmd.Length-1)]
