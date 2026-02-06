@@ -68,6 +68,8 @@ apps/ios/*.mobileprovision
 IDENTITY.md
 USER.md
 .tgz
+gateway.verbose.log
+gateway.watch.log
 
 # local tooling
 .serena/
