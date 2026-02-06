@@ -10,6 +10,7 @@ import {
   renderStreamingGroup,
 } from "../chat/grouped-render.ts";
 import { normalizeMessage, normalizeRoleForGrouping } from "../chat/message-normalizer.ts";
+import { t } from "../i18n.ts";
 import { icons } from "../icons.ts";
 import { renderMarkdownSidebar } from "./markdown-sidebar.ts";
 import "../components/resizable-divider.ts";
@@ -200,9 +201,12 @@ export function renderChat(props: ChatProps) {
   const hasAttachments = (props.attachments?.length ?? 0) > 0;
   const composePlaceholder = props.connected
     ? hasAttachments
-      ? "Add a message or paste more images..."
-      : "Message (↩ to send, Shift+↩ for line breaks, paste images)"
-    : "Connect to the gateway to start chatting…";
+      ? t("Add a message or paste more images...", "输入消息或继续粘贴图片…")
+      : t(
+          "Message (↩ to send, Shift+↩ for line breaks, paste images)",
+          "输入消息（↩ 发送，Shift+↩ 换行，可直接粘贴图片）",
+        )
+    : t("Connect to the gateway to start chatting…", "连接网关后开始对话…");
 
   const splitRatio = props.splitRatio ?? 0.6;
   const sidebarOpen = Boolean(props.sidebarOpen && props.onCloseSidebar);
@@ -315,7 +319,7 @@ export function renderChat(props: ChatProps) {
         props.queue.length
           ? html`
             <div class="chat-queue" role="status" aria-live="polite">
-              <div class="chat-queue__title">Queued (${props.queue.length})</div>
+              <div class="chat-queue__title">${t("Queued", "队列")} (${props.queue.length})</div>
               <div class="chat-queue__list">
                 ${props.queue.map(
                   (item) => html`
@@ -323,13 +327,18 @@ export function renderChat(props: ChatProps) {
                       <div class="chat-queue__text">
                         ${
                           item.text ||
-                          (item.attachments?.length ? `Image (${item.attachments.length})` : "")
+                          (item.attachments?.length
+                            ? t(
+                                `Image (${item.attachments.length})`,
+                                `图片（${item.attachments.length}）`,
+                              )
+                            : "")
                         }
                       </div>
                       <button
                         class="btn chat-queue__remove"
                         type="button"
-                        aria-label="Remove queued message"
+                        aria-label=${t("Remove queued message", "移除队列消息")}
                         @click=${() => props.onQueueRemove(item.id)}
                       >
                         ${icons.x}
@@ -351,7 +360,7 @@ export function renderChat(props: ChatProps) {
               type="button"
               @click=${props.onScrollToBottom}
             >
-              New messages ${icons.arrowDown}
+              ${t("New messages", "新消息")} ${icons.arrowDown}
             </button>
           `
           : nothing
@@ -361,7 +370,7 @@ export function renderChat(props: ChatProps) {
         ${renderAttachmentPreview(props)}
         <div class="chat-compose__row">
           <label class="field chat-compose__field">
-            <span>Message</span>
+            <span>${t("Message", "消息")}</span>
             <textarea
               ${ref((el) => el && adjustTextareaHeight(el as HTMLTextAreaElement))}
               .value=${props.draft}
@@ -399,14 +408,14 @@ export function renderChat(props: ChatProps) {
               ?disabled=${!props.connected || (!canAbort && props.sending)}
               @click=${canAbort ? props.onAbort : props.onNewSession}
             >
-              ${canAbort ? "Stop" : "New session"}
+              ${canAbort ? t("Stop", "停止") : t("New session", "新会话")}
             </button>
             <button
               class="btn primary"
               ?disabled=${!props.connected}
               @click=${props.onSend}
             >
-              ${isBusy ? "Queue" : "Send"}<kbd class="btn-kbd">↵</kbd>
+              ${isBusy ? t("Queue", "加入队列") : t("Send", "发送")}<kbd class="btn-kbd">↵</kbd>
             </button>
           </div>
         </div>

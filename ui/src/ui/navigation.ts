@@ -1,19 +1,21 @@
 import type { IconName } from "./icons.js";
+import { t } from "./i18n.ts";
 
 export const TAB_GROUPS = [
-  { label: "Chat", tabs: ["chat"] },
+  { label: t("Chat", "对话"), tabs: ["chat"] },
   {
-    label: "Control",
-    tabs: ["overview", "channels", "instances", "sessions", "cron"],
+    label: t("Control", "控制"),
+    tabs: ["overview", "channels", "wecom", "instances", "sessions", "cron"],
   },
-  { label: "Agent", tabs: ["agents", "skills", "nodes"] },
-  { label: "Settings", tabs: ["config", "debug", "logs"] },
+  { label: t("Agent", "助手"), tabs: ["agents", "skills", "nodes"] },
+  { label: t("Settings", "设置"), tabs: ["config", "debug", "logs"] },
 ] as const;
 
 export type Tab =
   | "agents"
   | "overview"
   | "channels"
+  | "wecom"
   | "instances"
   | "sessions"
   | "cron"
@@ -28,6 +30,7 @@ const TAB_PATHS: Record<Tab, string> = {
   agents: "/agents",
   overview: "/overview",
   channels: "/channels",
+  wecom: "/wecom",
   instances: "/instances",
   sessions: "/sessions",
   cron: "/cron",
@@ -130,6 +133,8 @@ export function iconForTab(tab: Tab): IconName {
       return "barChart";
     case "channels":
       return "link";
+    case "wecom":
+      return "messageSquare";
     case "instances":
       return "radio";
     case "sessions":
@@ -154,60 +159,88 @@ export function iconForTab(tab: Tab): IconName {
 export function titleForTab(tab: Tab) {
   switch (tab) {
     case "agents":
-      return "Agents";
+      return t("Agents", "助手");
     case "overview":
-      return "Overview";
+      return t("Overview", "概览");
     case "channels":
-      return "Channels";
+      return t("Channels", "通道");
+    case "wecom":
+      return t("WeCom KF", "微信客服");
     case "instances":
-      return "Instances";
+      return t("Instances", "实例");
     case "sessions":
-      return "Sessions";
+      return t("Sessions", "会话");
     case "cron":
-      return "Cron Jobs";
+      return t("Cron Jobs", "定时任务");
     case "skills":
-      return "Skills";
+      return t("Skills", "技能");
     case "nodes":
-      return "Nodes";
+      return t("Nodes", "节点");
     case "chat":
-      return "Chat";
+      return t("Chat", "对话");
     case "config":
-      return "Config";
+      return t("Config", "配置");
     case "debug":
-      return "Debug";
+      return t("Debug", "调试");
     case "logs":
-      return "Logs";
+      return t("Logs", "日志");
     default:
-      return "Control";
+      return t("Control", "控制");
   }
 }
 
 export function subtitleForTab(tab: Tab) {
   switch (tab) {
     case "agents":
-      return "Manage agent workspaces, tools, and identities.";
+      return t("Manage agent workspaces, tools, and identities.", "管理助手工作区、工具与身份。");
     case "overview":
-      return "Gateway status, entry points, and a fast health read.";
+      return t(
+        "Gateway status, entry points, and a fast health read.",
+        "网关状态、入口与快速健康检查。",
+      );
     case "channels":
-      return "Manage channels and settings.";
+      return t("Manage channels and settings.", "管理通道与设置。");
+    case "wecom":
+      return t(
+        "Configure WeCom customer service callback and tunnel.",
+        "配置微信客服回调与公网隧道。",
+      );
     case "instances":
-      return "Presence beacons from connected clients and nodes.";
+      return t(
+        "Presence beacons from connected clients and nodes.",
+        "来自已连接客户端与节点的在线信标。",
+      );
     case "sessions":
-      return "Inspect active sessions and adjust per-session defaults.";
+      return t(
+        "Inspect active sessions and adjust per-session defaults.",
+        "查看会话并调整会话默认值。",
+      );
     case "cron":
-      return "Schedule wakeups and recurring agent runs.";
+      return t("Schedule wakeups and recurring agent runs.", "设置唤醒与周期性运行。");
     case "skills":
-      return "Manage skill availability and API key injection.";
+      return t(
+        "Manage skill availability and API key injection.",
+        "管理技能可用性与 API Key 注入。",
+      );
     case "nodes":
-      return "Paired devices, capabilities, and command exposure.";
+      return t(
+        "Paired devices, capabilities, and command exposure.",
+        "已配对设备、能力与命令暴露。",
+      );
     case "chat":
-      return "Direct gateway chat session for quick interventions.";
+      return t(
+        "Direct gateway chat session for quick interventions.",
+        "网关直连对话，用于快速干预。",
+      );
     case "config":
-      return "Edit ~/.openclaw/openclaw.json safely.";
+      return t("Edit ~/.openclaw/openclaw.json safely.", "安全编辑 ~/.openclaw/openclaw.json。");
     case "debug":
-      return "Gateway snapshots, events, and manual RPC calls.";
+      return t(
+        "Gateway snapshots, events, and manual RPC calls.",
+        "网关快照、事件与手动 RPC 调用。",
+      );
     case "logs":
-      return "Live tail of the gateway file logs.";
+      return t("Live tail of the gateway file logs.", "网关日志实时追踪。");
     default:
       return "";
   }

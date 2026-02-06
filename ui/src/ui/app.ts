@@ -77,6 +77,11 @@ import {
 } from "./app-tool-stream.ts";
 import { resolveInjectedAssistantIdentity } from "./assistant-identity.ts";
 import { loadAssistantIdentity as loadAssistantIdentityInternal } from "./controllers/assistant-identity.ts";
+import {
+  loadWecomKfStatus as loadWecomKfStatusInternal,
+  startWecomKf as startWecomKfInternal,
+  stopWecomKf as stopWecomKfInternal,
+} from "./controllers/wecom-kf.ts";
 import { loadSettings, type UiSettings } from "./storage.ts";
 import { type ChatAttachment, type ChatQueueItem, type CronFormState } from "./ui-types.ts";
 
@@ -102,7 +107,7 @@ function resolveOnboardingMode(): boolean {
 }
 
 @customElement("openclaw-app")
-export class OpenClawApp extends LitElement {
+export class wehelperApp extends LitElement {
   @state() settings: UiSettings = loadSettings();
   @state() password = "";
   @state() tab: Tab = "chat";
@@ -185,6 +190,11 @@ export class OpenClawApp extends LitElement {
   @state() channelsSnapshot: ChannelsStatusSnapshot | null = null;
   @state() channelsError: string | null = null;
   @state() channelsLastSuccess: number | null = null;
+  @state() wecomKfLoading = false;
+  @state() wecomKfBusy = false;
+  @state() wecomKfStatus: import("./controllers/wecom-kf.ts").WecomKfStatus | null = null;
+  @state() wecomKfError: string | null = null;
+  @state() wecomKfSkipHistory = false;
   @state() whatsappLoginMessage: string | null = null;
   @state() whatsappLoginQrDataUrl: string | null = null;
   @state() whatsappLoginConnected: boolean | null = null;
@@ -413,6 +423,25 @@ export class OpenClawApp extends LitElement {
 
   async handleChannelConfigReload() {
     await handleChannelConfigReloadInternal(this);
+  }
+
+  async handleWecomKfRefresh() {
+    await loadWecomKfStatusInternal(this);
+  }
+
+  async handleWecomKfStart(config: import("./controllers/wecom-kf.ts").WecomKfStartConfig) {
+    await startWecomKfInternal(this, { ...config, skipHistory: this.wecomKfSkipHistory });
+    // Tunnel URL arrives asynchronously; refresh a couple of times after start.
+    window.setTimeout(() => {
+      void this.handleWecomKfRefresh();
+    }, 1500);
+    window.setTimeout(() => {
+      void this.handleWecomKfRefresh();
+    }, 5000);
+  }
+
+  async handleWecomKfStop() {
+    await stopWecomKfInternal(this);
   }
 
   handleNostrProfileEdit(accountId: string, profile: NostrProfile | null) {

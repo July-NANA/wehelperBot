@@ -1,5 +1,6 @@
 import { html, nothing, type TemplateResult } from "lit";
 import type { ConfigUiHints } from "../types.ts";
+import { t } from "../i18n.ts";
 import {
   defaultValue,
   hintForPath,
@@ -116,7 +117,7 @@ export function renderNode(params: {
   if (unsupported.has(key)) {
     return html`<div class="cfg-field cfg-field--error">
       <div class="cfg-field__label">${label}</div>
-      <div class="cfg-field__error">Unsupported schema node. Use Raw mode.</div>
+      <div class="cfg-field__error">${t("Unsupported schema node. Use Raw mode.", "不支持的配置节点。请使用原始模式。")}</div>
     </div>`;
   }
 
@@ -287,7 +288,7 @@ export function renderNode(params: {
   return html`
     <div class="cfg-field cfg-field--error">
       <div class="cfg-field__label">${label}</div>
-      <div class="cfg-field__error">Unsupported type: ${type}. Use Raw mode.</div>
+      <div class="cfg-field__error">${t("Unsupported type", "不支持的类型")}: ${type}. ${t("Use Raw mode.", "请使用原始模式。")}</div>
     </div>
   `;
 }
@@ -356,7 +357,7 @@ function renderTextInput(params: {
           <button
             type="button"
             class="cfg-input__reset"
-            title="Reset to default"
+            title=${t("Reset to default", "恢复默认值")}
             ?disabled=${disabled}
             @click=${() => onPatch(path, schema.default)}
           >↺</button>
@@ -452,7 +453,7 @@ function renderSelect(params: {
           onPatch(path, val === unset ? undefined : options[Number(val)]);
         }}
       >
-        <option value=${unset}>Select...</option>
+        <option value=${unset}>${t("Select...", "请选择...")}</option>
         ${options.map(
           (opt, idx) => html`
           <option value=${String(idx)}>${String(opt)}</option>
@@ -593,7 +594,7 @@ function renderArray(params: {
     return html`
       <div class="cfg-field cfg-field--error">
         <div class="cfg-field__label">${label}</div>
-        <div class="cfg-field__error">Unsupported array schema. Use Raw mode.</div>
+      <div class="cfg-field__error">${t("Unsupported array schema. Use Raw mode.", "不支持的数组配置。请使用原始模式。")}</div>
       </div>
     `;
   }
@@ -623,7 +624,7 @@ function renderArray(params: {
       ${
         arr.length === 0
           ? html`
-              <div class="cfg-array__empty">No items yet. Click "Add" to create one.</div>
+              <div class="cfg-array__empty">${t('No items yet. Click "Add" to create one.', "暂无条目，点击“添加”创建。")}</div>
             `
           : html`
         <div class="cfg-array__items">
@@ -635,7 +636,7 @@ function renderArray(params: {
                 <button
                   type="button"
                   class="cfg-array__item-remove"
-                  title="Remove item"
+                  title=${t("Remove item", "移除条目")}
                   ?disabled=${disabled}
                   @click=${() => {
                     const next = [...arr];
@@ -685,7 +686,7 @@ function renderMapField(params: {
   return html`
     <div class="cfg-map">
       <div class="cfg-map__header">
-        <span class="cfg-map__label">Custom entries</span>
+        <span class="cfg-map__label">${t("Custom entries", "自定义条目")}</span>
         <button
           type="button"
           class="cfg-map__add"
@@ -710,7 +711,7 @@ function renderMapField(params: {
       ${
         entries.length === 0
           ? html`
-              <div class="cfg-map__empty">No custom entries.</div>
+              <div class="cfg-map__empty">${t("No custom entries.", "暂无自定义条目。")}</div>
             `
           : html`
         <div class="cfg-map__items">
@@ -723,7 +724,7 @@ function renderMapField(params: {
                   <input
                     type="text"
                     class="cfg-input cfg-input--sm"
-                    placeholder="Key"
+                    placeholder=${t("Key", "键")}
                     .value=${key}
                     ?disabled=${disabled}
                     @change=${(e: Event) => {
@@ -747,7 +748,7 @@ function renderMapField(params: {
                       ? html`
                         <textarea
                           class="cfg-textarea cfg-textarea--sm"
-                          placeholder="JSON value"
+                          placeholder=${t("JSON value", "JSON 值")}
                           rows="2"
                           .value=${fallback}
                           ?disabled=${disabled}
@@ -781,7 +782,7 @@ function renderMapField(params: {
                 <button
                   type="button"
                   class="cfg-map__item-remove"
-                  title="Remove entry"
+                  title=${t("Remove entry", "移除条目")}
                   ?disabled=${disabled}
                   @click=${() => {
                     const next = { ...value };

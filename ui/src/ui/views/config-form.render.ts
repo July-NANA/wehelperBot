@@ -1,5 +1,6 @@
 import { html, nothing } from "lit";
 import type { ConfigUiHints } from "../types.ts";
+import { t } from "../i18n.ts";
 import { icons } from "../icons.ts";
 import { renderNode } from "./config-form.node.ts";
 import { hintForPath, humanize, schemaType, type JsonSchema } from "./config-form.shared.ts";
@@ -239,39 +240,123 @@ const sectionIcons = {
 // Section metadata
 export const SECTION_META: Record<string, { label: string; description: string }> = {
   env: {
-    label: "Environment Variables",
-    description: "Environment variables passed to the gateway process",
+    label: t("Environment Variables", "环境变量"),
+    description: t(
+      "Environment variables passed to the gateway process",
+      "传递给网关进程的环境变量",
+    ),
   },
-  update: { label: "Updates", description: "Auto-update settings and release channel" },
-  agents: { label: "Agents", description: "Agent configurations, models, and identities" },
-  auth: { label: "Authentication", description: "API keys and authentication profiles" },
+  update: {
+    label: t("Updates", "更新"),
+    description: t("Auto-update settings and release channel", "自动更新设置与发布通道"),
+  },
+  agents: {
+    label: t("Agents", "助手"),
+    description: t("Agent configurations, models, and identities", "助手配置、模型与身份"),
+  },
+  auth: {
+    label: t("Authentication", "认证"),
+    description: t("API keys and authentication profiles", "API Key 与认证配置"),
+  },
   channels: {
-    label: "Channels",
-    description: "Messaging channels (Telegram, Discord, Slack, etc.)",
+    label: t("Channels", "通道"),
+    description: t(
+      "Messaging channels (Telegram, Discord, Slack, etc.)",
+      "消息通道（Telegram、Discord、Slack 等）",
+    ),
   },
-  messages: { label: "Messages", description: "Message handling and routing settings" },
-  commands: { label: "Commands", description: "Custom slash commands" },
-  hooks: { label: "Hooks", description: "Webhooks and event hooks" },
-  skills: { label: "Skills", description: "Skill packs and capabilities" },
-  tools: { label: "Tools", description: "Tool configurations (browser, search, etc.)" },
-  gateway: { label: "Gateway", description: "Gateway server settings (port, auth, binding)" },
-  wizard: { label: "Setup Wizard", description: "Setup wizard state and history" },
+  messages: {
+    label: t("Messages", "消息"),
+    description: t("Message handling and routing settings", "消息处理与路由设置"),
+  },
+  commands: {
+    label: t("Commands", "命令"),
+    description: t("Custom slash commands", "自定义斜杠命令"),
+  },
+  hooks: {
+    label: t("Hooks", "钩子"),
+    description: t("Webhooks and event hooks", "Webhook 与事件钩子"),
+  },
+  skills: {
+    label: t("Skills", "技能"),
+    description: t("Skill packs and capabilities", "技能包与能力"),
+  },
+  tools: {
+    label: t("Tools", "工具"),
+    description: t("Tool configurations (browser, search, etc.)", "工具配置（浏览器、搜索等）"),
+  },
+  gateway: {
+    label: t("Gateway", "网关"),
+    description: t(
+      "Gateway server settings (port, auth, binding)",
+      "网关服务设置（端口、认证、绑定）",
+    ),
+  },
+  wizard: {
+    label: t("Setup Wizard", "设置向导"),
+    description: t("Setup wizard state and history", "向导状态与历史"),
+  },
   // Additional sections
-  meta: { label: "Metadata", description: "Gateway metadata and version information" },
-  logging: { label: "Logging", description: "Log levels and output configuration" },
-  browser: { label: "Browser", description: "Browser automation settings" },
-  ui: { label: "UI", description: "User interface preferences" },
-  models: { label: "Models", description: "AI model configurations and providers" },
-  bindings: { label: "Bindings", description: "Key bindings and shortcuts" },
-  broadcast: { label: "Broadcast", description: "Broadcast and notification settings" },
-  audio: { label: "Audio", description: "Audio input/output settings" },
-  session: { label: "Session", description: "Session management and persistence" },
-  cron: { label: "Cron", description: "Scheduled tasks and automation" },
-  web: { label: "Web", description: "Web server and API settings" },
-  discovery: { label: "Discovery", description: "Service discovery and networking" },
-  canvasHost: { label: "Canvas Host", description: "Canvas rendering and display" },
-  talk: { label: "Talk", description: "Voice and speech settings" },
-  plugins: { label: "Plugins", description: "Plugin management and extensions" },
+  meta: {
+    label: t("Metadata", "元数据"),
+    description: t("Gateway metadata and version information", "网关元数据与版本信息"),
+  },
+  logging: {
+    label: t("Logging", "日志"),
+    description: t("Log levels and output configuration", "日志等级与输出配置"),
+  },
+  browser: {
+    label: t("Browser", "浏览器"),
+    description: t("Browser automation settings", "浏览器自动化设置"),
+  },
+  ui: {
+    label: t("UI", "界面"),
+    description: t("User interface preferences", "界面偏好设置"),
+  },
+  models: {
+    label: t("Models", "模型"),
+    description: t("AI model configurations and providers", "模型配置与提供方"),
+  },
+  bindings: {
+    label: t("Bindings", "绑定"),
+    description: t("Key bindings and shortcuts", "快捷键与绑定"),
+  },
+  broadcast: {
+    label: t("Broadcast", "广播"),
+    description: t("Broadcast and notification settings", "广播与通知设置"),
+  },
+  audio: {
+    label: t("Audio", "音频"),
+    description: t("Audio input/output settings", "音频输入输出设置"),
+  },
+  session: {
+    label: t("Session", "会话"),
+    description: t("Session management and persistence", "会话管理与持久化"),
+  },
+  cron: {
+    label: t("Cron", "定时任务"),
+    description: t("Scheduled tasks and automation", "定时任务与自动化"),
+  },
+  web: {
+    label: t("Web", "Web"),
+    description: t("Web server and API settings", "Web 服务与 API 设置"),
+  },
+  discovery: {
+    label: t("Discovery", "发现"),
+    description: t("Service discovery and networking", "服务发现与网络"),
+  },
+  canvasHost: {
+    label: t("Canvas Host", "画布宿主"),
+    description: t("Canvas rendering and display", "画布渲染与显示"),
+  },
+  talk: {
+    label: t("Talk", "语音"),
+    description: t("Voice and speech settings", "语音与说话设置"),
+  },
+  plugins: {
+    label: t("Plugins", "插件"),
+    description: t("Plugin management and extensions", "插件管理与扩展"),
+  },
 };
 
 function getSectionIcon(key: string) {
@@ -355,14 +440,14 @@ function schemaMatches(schema: JsonSchema, query: string): boolean {
 export function renderConfigForm(props: ConfigFormProps) {
   if (!props.schema) {
     return html`
-      <div class="muted">Schema unavailable.</div>
+      <div class="muted">${t("Schema unavailable.", "配置架构不可用。")}</div>
     `;
   }
   const schema = props.schema;
   const value = props.value ?? {};
   if (schemaType(schema) !== "object" || !schema.properties) {
     return html`
-      <div class="callout danger">Unsupported schema. Use Raw.</div>
+      <div class="callout danger">${t("Unsupported schema. Use Raw.", "不支持的配置架构。请使用原始模式。")}</div>
     `;
   }
   const unsupported = new Set(props.unsupportedPaths ?? []);
@@ -413,7 +498,11 @@ export function renderConfigForm(props: ConfigFormProps) {
       <div class="config-empty">
         <div class="config-empty__icon">${icons.search}</div>
         <div class="config-empty__text">
-          ${searchQuery ? `No settings match "${searchQuery}"` : "No settings in this section"}
+          ${
+            searchQuery
+              ? t(`No settings match "${searchQuery}"`, `没有匹配“${searchQuery}”的设置`)
+              : t("No settings in this section", "此分组暂无设置")
+          }
         </div>
       </div>
     `;

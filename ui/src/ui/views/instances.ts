@@ -1,5 +1,6 @@
 import { html, nothing } from "lit";
 import type { PresenceEntry } from "../types.ts";
+import { t } from "../i18n.ts";
 import { formatPresenceAge, formatPresenceSummary } from "../presenter.ts";
 
 export type InstancesProps = {
@@ -15,11 +16,11 @@ export function renderInstances(props: InstancesProps) {
     <section class="card">
       <div class="row" style="justify-content: space-between;">
         <div>
-          <div class="card-title">Connected Instances</div>
-          <div class="card-sub">Presence beacons from the gateway and clients.</div>
+          <div class="card-title">${t("Connected Instances", "已连接实例")}</div>
+          <div class="card-sub">${t("Presence beacons from the gateway and clients.", "来自网关与客户端的在线信标。")}</div>
         </div>
         <button class="btn" ?disabled=${props.loading} @click=${props.onRefresh}>
-          ${props.loading ? "Loading…" : "Refresh"}
+          ${props.loading ? t("Loading…", "加载中…") : t("Refresh", "刷新")}
         </button>
       </div>
       ${
@@ -40,7 +41,7 @@ export function renderInstances(props: InstancesProps) {
         ${
           props.entries.length === 0
             ? html`
-                <div class="muted">No instances reported yet.</div>
+                <div class="muted">${t("No instances reported yet.", "暂无实例上报。")}</div>
               `
             : props.entries.map((entry) => renderEntry(entry))
         }
@@ -50,7 +51,10 @@ export function renderInstances(props: InstancesProps) {
 }
 
 function renderEntry(entry: PresenceEntry) {
-  const lastInput = entry.lastInputSeconds != null ? `${entry.lastInputSeconds}s ago` : "n/a";
+  const lastInput =
+    entry.lastInputSeconds != null
+      ? t(`${entry.lastInputSeconds}s ago`, `${entry.lastInputSeconds} 秒前`)
+      : t("n/a", "暂无");
   const mode = entry.mode ?? "unknown";
   const roles = Array.isArray(entry.roles) ? entry.roles.filter(Boolean) : [];
   const scopes = Array.isArray(entry.scopes) ? entry.scopes.filter(Boolean) : [];
@@ -63,7 +67,7 @@ function renderEntry(entry: PresenceEntry) {
   return html`
     <div class="list-item">
       <div class="list-main">
-        <div class="list-title">${entry.host ?? "unknown host"}</div>
+        <div class="list-title">${entry.host ?? t("unknown host", "未知主机")}</div>
         <div class="list-sub">${formatPresenceSummary(entry)}</div>
         <div class="chip-row">
           <span class="chip">${mode}</span>
@@ -81,8 +85,8 @@ function renderEntry(entry: PresenceEntry) {
       </div>
       <div class="list-meta">
         <div>${formatPresenceAge(entry)}</div>
-        <div class="muted">Last input ${lastInput}</div>
-        <div class="muted">Reason ${entry.reason ?? ""}</div>
+        <div class="muted">${t("Last input", "最近输入")} ${lastInput}</div>
+        <div class="muted">${t("Reason", "原因")} ${entry.reason ?? ""}</div>
       </div>
     </div>
   `;

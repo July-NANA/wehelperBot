@@ -3,7 +3,7 @@ import type { AppViewState } from "./app-view-state.ts";
 import { parseAgentSessionKey } from "../../../src/routing/session-key.js";
 import { ChatHost, refreshChatAvatar } from "./app-chat.ts";
 import { renderChatControls, renderTab, renderThemeToggle } from "./app-render.helpers.ts";
-import { OpenClawApp } from "./app.ts";
+import { wehelperApp } from "./app.ts";
 import { loadAgentFileContent, loadAgentFiles, saveAgentFile } from "./controllers/agent-files.ts";
 import { loadAgentIdentities, loadAgentIdentity } from "./controllers/agent-identity.ts";
 import { loadAgentSkills } from "./controllers/agent-skills.ts";
@@ -68,6 +68,7 @@ import { renderNodes } from "./views/nodes.ts";
 import { renderOverview } from "./views/overview.ts";
 import { renderSessions } from "./views/sessions.ts";
 import { renderSkills } from "./views/skills.ts";
+import { renderWecomKf } from "./views/wecom-kf.ts";
 
 const AVATAR_DATA_RE = /^data:/i;
 const AVATAR_HTTP_RE = /^https?:\/\//i;
@@ -126,10 +127,10 @@ export function renderApp(state: AppViewState) {
           </button>
           <div class="brand">
             <div class="brand-logo">
-              <img src="${logoHref}" alt="OpenClaw" />
+              <img src="${logoHref}" alt="wehelper" />
             </div>
             <div class="brand-text">
-              <div class="brand-title">OPENCLAW</div>
+              <div class="brand-title">WEHELPER</div>
               <div class="brand-sub">Gateway Dashboard</div>
             </div>
           </div>
@@ -218,7 +219,7 @@ export function renderApp(state: AppViewState) {
                 onSessionKeyChange: (next) => {
                   state.sessionKey = next;
                   state.chatMessage = "";
-                  (state as unknown as OpenClawApp).resetToolStream();
+                  (state as unknown as wehelperApp).resetToolStream();
                   state.applySettings({
                     ...state.settings,
                     sessionKey: next,
@@ -268,6 +269,30 @@ export function renderApp(state: AppViewState) {
                 onNostrProfileSave: () => state.handleNostrProfileSave(),
                 onNostrProfileImport: () => state.handleNostrProfileImport(),
                 onNostrProfileToggleAdvanced: () => state.handleNostrProfileToggleAdvanced(),
+              })
+            : nothing
+        }
+
+        ${
+          state.tab === "wecom"
+            ? renderWecomKf({
+                connected: state.connected,
+                loading: state.wecomKfLoading,
+                busy: state.wecomKfBusy,
+                error: state.wecomKfError,
+                status: state.wecomKfStatus,
+                configForm: state.configForm,
+                configDirty: state.configFormDirty,
+                skipHistory: state.wecomKfSkipHistory,
+                onSkipHistoryChange: (next) => {
+                  state.wecomKfSkipHistory = next;
+                },
+                onConfigPatch: (path, value) =>
+                  updateConfigFormValue(state as unknown as ConfigState, path, value),
+                onConfigSave: () => saveConfig(state as unknown as ConfigState),
+                onRefresh: () => state.handleWecomKfRefresh(),
+                onStart: (config) => state.handleWecomKfStart(config),
+                onStop: () => state.handleWecomKfStop(),
               })
             : nothing
         }
@@ -840,10 +865,10 @@ export function renderApp(state: AppViewState) {
                   state.chatAttachments = [];
                   state.chatStream = null;
                   state.chatRunId = null;
-                  (state as unknown as OpenClawApp).chatStreamStartedAt = null;
+                  (state as unknown as wehelperApp).chatStreamStartedAt = null;
                   state.chatQueue = [];
-                  (state as unknown as OpenClawApp).resetToolStream();
-                  (state as unknown as OpenClawApp).resetChatScroll();
+                  (state as unknown as wehelperApp).resetToolStream();
+                  (state as unknown as wehelperApp).resetChatScroll();
                   state.applySettings({
                     ...state.settings,
                     sessionKey: next,
@@ -885,28 +910,28 @@ export function renderApp(state: AppViewState) {
                     chatFocusMode: !state.settings.chatFocusMode,
                   });
                 },
-                onChatScroll: (event) => (state as unknown as OpenClawApp).handleChatScroll(event),
+                onChatScroll: (event) => (state as unknown as wehelperApp).handleChatScroll(event),
                 onDraftChange: (next) => (state.chatMessage = next),
                 attachments: state.chatAttachments,
                 onAttachmentsChange: (next) => (state.chatAttachments = next),
-                onSend: () => (state as unknown as OpenClawApp).handleSendChat(),
+                onSend: () => (state as unknown as wehelperApp).handleSendChat(),
                 canAbort: Boolean(state.chatRunId),
-                onAbort: () => void (state as unknown as OpenClawApp).handleAbortChat(),
-                onQueueRemove: (id) => (state as unknown as OpenClawApp).removeQueuedMessage(id),
+                onAbort: () => void (state as unknown as wehelperApp).handleAbortChat(),
+                onQueueRemove: (id) => (state as unknown as wehelperApp).removeQueuedMessage(id),
                 onNewSession: () =>
-                  (state as unknown as OpenClawApp).handleSendChat("/new", { restoreDraft: true }),
+                  (state as unknown as wehelperApp).handleSendChat("/new", { restoreDraft: true }),
                 showNewMessages: state.chatNewMessagesBelow,
                 onScrollToBottom: () => state.scrollToBottom(),
                 // Sidebar props for tool output viewing
-                sidebarOpen: (state as unknown as OpenClawApp).sidebarOpen,
-                sidebarContent: (state as unknown as OpenClawApp).sidebarContent,
-                sidebarError: (state as unknown as OpenClawApp).sidebarError,
-                splitRatio: (state as unknown as OpenClawApp).splitRatio,
+                sidebarOpen: (state as unknown as wehelperApp).sidebarOpen,
+                sidebarContent: (state as unknown as wehelperApp).sidebarContent,
+                sidebarError: (state as unknown as wehelperApp).sidebarError,
+                splitRatio: (state as unknown as wehelperApp).splitRatio,
                 onOpenSidebar: (content: string) =>
-                  (state as unknown as OpenClawApp).handleOpenSidebar(content),
-                onCloseSidebar: () => (state as unknown as OpenClawApp).handleCloseSidebar(),
+                  (state as unknown as wehelperApp).handleOpenSidebar(content),
+                onCloseSidebar: () => (state as unknown as wehelperApp).handleCloseSidebar(),
                 onSplitRatioChange: (ratio: number) =>
-                  (state as unknown as OpenClawApp).handleSplitRatioChange(ratio),
+                  (state as unknown as wehelperApp).handleSplitRatioChange(ratio),
                 assistantName: state.assistantName,
                 assistantAvatar: state.assistantAvatar,
               })
@@ -931,27 +956,27 @@ export function renderApp(state: AppViewState) {
                 formMode: state.configFormMode,
                 formValue: state.configForm,
                 originalValue: state.configFormOriginal,
-                searchQuery: (state as unknown as OpenClawApp).configSearchQuery,
-                activeSection: (state as unknown as OpenClawApp).configActiveSection,
-                activeSubsection: (state as unknown as OpenClawApp).configActiveSubsection,
+                searchQuery: (state as unknown as wehelperApp).configSearchQuery,
+                activeSection: (state as unknown as wehelperApp).configActiveSection,
+                activeSubsection: (state as unknown as wehelperApp).configActiveSubsection,
                 onRawChange: (next) => {
                   state.configRaw = next;
                 },
                 onFormModeChange: (mode) => (state.configFormMode = mode),
                 onFormPatch: (path, value) =>
-                  updateConfigFormValue(state as unknown as OpenClawApp, path, value),
+                  updateConfigFormValue(state as unknown as wehelperApp, path, value),
                 onSearchChange: (query) =>
-                  ((state as unknown as OpenClawApp).configSearchQuery = query),
+                  ((state as unknown as wehelperApp).configSearchQuery = query),
                 onSectionChange: (section) => {
-                  (state as unknown as OpenClawApp).configActiveSection = section;
-                  (state as unknown as OpenClawApp).configActiveSubsection = null;
+                  (state as unknown as wehelperApp).configActiveSection = section;
+                  (state as unknown as wehelperApp).configActiveSubsection = null;
                 },
                 onSubsectionChange: (section) =>
-                  ((state as unknown as OpenClawApp).configActiveSubsection = section),
-                onReload: () => loadConfig(state as unknown as OpenClawApp),
-                onSave: () => saveConfig(state as unknown as OpenClawApp),
-                onApply: () => applyConfig(state as unknown as OpenClawApp),
-                onUpdate: () => runUpdate(state as unknown as OpenClawApp),
+                  ((state as unknown as wehelperApp).configActiveSubsection = section),
+                onReload: () => loadConfig(state as unknown as wehelperApp),
+                onSave: () => saveConfig(state as unknown as wehelperApp),
+                onApply: () => applyConfig(state as unknown as wehelperApp),
+                onUpdate: () => runUpdate(state as unknown as wehelperApp),
               })
             : nothing
         }
@@ -995,8 +1020,8 @@ export function renderApp(state: AppViewState) {
                 onToggleAutoFollow: (next) => (state.logsAutoFollow = next),
                 onRefresh: () => loadLogs(state as unknown as LogsState, { reset: true }),
                 onExport: (lines, label) =>
-                  (state as unknown as OpenClawApp).exportLogs(lines, label),
-                onScroll: (event) => (state as unknown as OpenClawApp).handleLogsScroll(event),
+                  (state as unknown as wehelperApp).exportLogs(lines, label),
+                onScroll: (event) => (state as unknown as wehelperApp).handleLogsScroll(event),
               })
             : nothing
         }

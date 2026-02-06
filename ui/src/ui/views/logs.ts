@@ -1,5 +1,6 @@
 import { html, nothing } from "lit";
 import type { LogEntry, LogLevel } from "../types.ts";
+import { t } from "../i18n.ts";
 
 const LEVELS: LogLevel[] = ["trace", "debug", "info", "warn", "error", "fatal"];
 
@@ -52,17 +53,19 @@ export function renderLogs(props: LogsProps) {
     return matchesFilter(entry, needle);
   });
   const exportLabel = needle || levelFiltered ? "filtered" : "visible";
+  const exportLabelDisplay =
+    needle || levelFiltered ? t("filtered", "已筛选") : t("visible", "可见");
 
   return html`
     <section class="card">
       <div class="row" style="justify-content: space-between;">
         <div>
           <div class="card-title">Logs</div>
-          <div class="card-sub">Gateway file logs (JSONL).</div>
+          <div class="card-sub">${t("Gateway file logs (JSONL).", "网关文件日志（JSONL）。")}</div>
         </div>
         <div class="row" style="gap: 8px;">
           <button class="btn" ?disabled=${props.loading} @click=${props.onRefresh}>
-            ${props.loading ? "Loading…" : "Refresh"}
+            ${props.loading ? t("Loading…", "加载中…") : t("Refresh", "刷新")}
           </button>
           <button
             class="btn"
@@ -73,22 +76,22 @@ export function renderLogs(props: LogsProps) {
                 exportLabel,
               )}
           >
-            Export ${exportLabel}
+            ${t("Export", "导出")} ${exportLabelDisplay}
           </button>
         </div>
       </div>
 
       <div class="filters" style="margin-top: 14px;">
         <label class="field" style="min-width: 220px;">
-          <span>Filter</span>
+          <span>${t("Filter", "筛选")}</span>
           <input
             .value=${props.filterText}
             @input=${(e: Event) => props.onFilterTextChange((e.target as HTMLInputElement).value)}
-            placeholder="Search logs"
+            placeholder=${t("Search logs", "搜索日志")}
           />
         </label>
         <label class="field checkbox">
-          <span>Auto-follow</span>
+          <span>${t("Auto-follow", "自动跟随")}</span>
           <input
             type="checkbox"
             .checked=${props.autoFollow}
@@ -116,13 +119,13 @@ export function renderLogs(props: LogsProps) {
 
       ${
         props.file
-          ? html`<div class="muted" style="margin-top: 10px;">File: ${props.file}</div>`
+          ? html`<div class="muted" style="margin-top: 10px;">${t("File", "文件")}: ${props.file}</div>`
           : nothing
       }
       ${
         props.truncated
           ? html`
-              <div class="callout" style="margin-top: 10px">Log output truncated; showing latest chunk.</div>
+              <div class="callout" style="margin-top: 10px">${t("Log output truncated; showing latest chunk.", "日志被截断，仅显示最新片段。")}</div>
             `
           : nothing
       }
@@ -136,7 +139,7 @@ export function renderLogs(props: LogsProps) {
         ${
           filtered.length === 0
             ? html`
-                <div class="muted" style="padding: 12px">No log entries.</div>
+                <div class="muted" style="padding: 12px">${t("No log entries.", "暂无日志。")}</div>
               `
             : filtered.map(
                 (entry) => html`

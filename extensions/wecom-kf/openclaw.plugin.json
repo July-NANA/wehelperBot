@@ -1,0 +1,46 @@
+{
+  "id": "wecom-kf",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "enabled": { "type": "boolean", "default": true },
+      "corpId": { "type": "string" },
+      "token": { "type": "string" },
+      "aesKey": { "type": "string" },
+      "secret": { "type": "string" },
+      "skipHistory": { "type": "boolean", "default": false },
+      "listenHost": { "type": "string", "default": "127.0.0.1" },
+      "listenPort": { "type": "number", "default": 8080 },
+      "sessionMapPath": { "type": "string" },
+      "tunnel": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "autoStart": { "type": "boolean", "default": true },
+          "provider": { "type": "string", "enum": ["cloudflared"], "default": "cloudflared" },
+          "bin": { "type": "string", "default": "cloudflared" },
+          "url": { "type": "string", "default": "http://127.0.0.1:8080" },
+          "protocol": { "type": "string", "default": "http2" },
+          "loglevel": { "type": "string", "default": "info" }
+        }
+      }
+    }
+  },
+  "uiHints": {
+    "enabled": { "label": "Enable WeCom KF" },
+    "corpId": { "label": "WE_COM_KF_CORP_ID" },
+    "token": { "label": "WE_COM_KF_TOKEN", "sensitive": true },
+    "aesKey": { "label": "WE_COM_KF_AES_KEY", "sensitive": true },
+    "secret": { "label": "WE_COM_KF_SECRET", "sensitive": true },
+    "skipHistory": { "label": "Skip History (Only New Messages)" },
+    "listenHost": { "label": "Listen Host", "advanced": true },
+    "listenPort": { "label": "Listen Port", "advanced": true },
+    "sessionMapPath": { "label": "Session Map Path", "advanced": true },
+    "tunnel.autoStart": { "label": "Auto-start Tunnel", "advanced": true },
+    "tunnel.bin": { "label": "Cloudflared Bin", "advanced": true },
+    "tunnel.url": { "label": "Tunnel URL", "advanced": true },
+    "tunnel.protocol": { "label": "Tunnel Protocol", "advanced": true },
+    "tunnel.loglevel": { "label": "Tunnel Loglevel", "advanced": true }
+  }
+}
