@@ -8,7 +8,7 @@
 适用场景：
 
 - **已配置 Provider**：直接运行 `setup_wehelper` 启动即可
-- **未配置 Provider**：先运行 `configure_provider` 完成授权，再启动
+- **未配置 Provider**：直接运行 `setup_wehelper`，会自动进入配置流程并在完成后继续启动
 
 ---
 
@@ -20,9 +20,22 @@
 ./openclaw/scripts/startup/setup_wehelper.sh
 ```
 
+如果项目目录改名或路径含空格：
+
+```bash
+OPENCLAW_ROOT="/path/with spaces/wehelperBot/openclaw" ./openclaw/scripts/startup/setup_wehelper.sh
+```
+
 ### Windows (PowerShell)
 
 ```powershell
+.\openclaw\scripts\startup\setup_wehelper.ps1
+```
+
+如果项目目录改名或路径含空格：
+
+```powershell
+$env:OPENCLAW_ROOT="D:\Desktop\New folder\wehelperBot\openclaw"
 .\openclaw\scripts\startup\setup_wehelper.ps1
 ```
 
@@ -45,7 +58,7 @@ http://127.0.0.1:18789/
 
 ## 二、首次使用（未配置 Provider）
 
-先配置 Provider，再启动网关。
+先配置 Provider，再启动网关（如需单独配置）。
 
 ### 1) 配置 Provider
 
@@ -130,7 +143,7 @@ http://127.0.0.1:18789/
 - 不带参数时进入交互选择
 - 支持 OAuth 和 API Key 两类方式
 - 已配置时默认不重复执行，`--force` / `-Force` 可强制重配
-- 优先使用系统 `openclaw`，若不可用会自动退回 `pnpm openclaw`
+- 优先使用系统 `openclaw`，若不可用会自动退回本地 `node scripts/run-node.mjs` 或 `pnpm openclaw`
 
 示例：
 
@@ -147,6 +160,10 @@ http://127.0.0.1:18789/
 
 - 绝大多数是 **Provider 未配置或授权失效**
 - 先运行 `configure_provider` 配置，再重启网关
+
+### 4) 项目目录改名或路径包含空格
+
+- 设置 `OPENCLAW_ROOT` 指向 **OpenClaw 目录**（包含 `package.json` 的目录）
 
 ### 2) token mismatch
 

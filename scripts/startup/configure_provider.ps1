@@ -48,6 +48,8 @@ if ($env:OPENCLAW_BIN -and $env:OPENCLAW_BIN.Trim() -ne "") {
   $OpenclawCmd = $env:OPENCLAW_BIN.Split(" ", [System.StringSplitOptions]::RemoveEmptyEntries)
 } elseif (Get-Command openclaw -ErrorAction SilentlyContinue) {
   $OpenclawCmd = @("openclaw")
+} elseif (Test-Path (Join-Path $OpenclawDir "scripts\run-node.mjs")) {
+  $OpenclawCmd = @("node","scripts\run-node.mjs")
 } elseif (Get-Command pnpm -ErrorAction SilentlyContinue) {
   $OpenclawCmd = @("pnpm","openclaw","--")
 } else {

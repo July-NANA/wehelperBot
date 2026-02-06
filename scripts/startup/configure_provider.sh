@@ -34,6 +34,8 @@ if [[ -n "$OPENCLAW_BIN" ]]; then
   OPENCLAW_CMD=($OPENCLAW_BIN)
 elif command -v openclaw >/dev/null 2>&1; then
   OPENCLAW_CMD=(openclaw)
+elif [[ -f "$OPENCLAW_DIR/scripts/run-node.mjs" ]]; then
+  OPENCLAW_CMD=(node scripts/run-node.mjs)
 elif command -v pnpm >/dev/null 2>&1; then
   OPENCLAW_CMD=(pnpm openclaw --)
 else
