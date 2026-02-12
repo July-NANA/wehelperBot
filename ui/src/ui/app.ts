@@ -81,6 +81,7 @@ import {
   loadWecomKfStatus as loadWecomKfStatusInternal,
   startWecomKf as startWecomKfInternal,
   stopWecomKf as stopWecomKfInternal,
+  unbindWecomKfDevice as unbindWecomKfDeviceInternal,
 } from "./controllers/wecom-kf.ts";
 import { loadSettings, type UiSettings } from "./storage.ts";
 import { type ChatAttachment, type ChatQueueItem, type CronFormState } from "./ui-types.ts";
@@ -185,6 +186,28 @@ export class wehelperApp extends LitElement {
   @state() configSearchQuery = "";
   @state() configActiveSection: string | null = null;
   @state() configActiveSubsection: string | null = null;
+  @state() providersFilterText = "";
+  @state() providersExpandedIds: string[] = [];
+  @state() providersSelectedId: string | null = null;
+  @state() supplierDialogMode: "none" | "add" | "rename" | "delete" = "none";
+  @state() supplierDialogTargetId: string | null = null;
+  @state() supplierDraftName = "";
+  @state()
+  supplierDraftType:
+    | "openai-compatible"
+    | "openai-responses"
+    | "anthropic"
+    | "gemini"
+    | "azure-openai"
+    | "ollama"
+    | "custom" = "openai-compatible";
+  @state() supplierDefaultId: string | null = null;
+  @state() supplierModelDialogMode: "none" | "add" | "edit" | "delete" = "none";
+  @state() supplierModelDialogSupplierId: string | null = null;
+  @state() supplierModelDialogTargetIndex: number | null = null;
+  @state() supplierModelDraftId = "";
+  @state() supplierModelDraftName = "";
+  @state() supplierModelsManageMode: "simple" | "advanced" = "simple";
 
   @state() channelsLoading = false;
   @state() channelsSnapshot: ChannelsStatusSnapshot | null = null;
@@ -288,6 +311,7 @@ export class wehelperApp extends LitElement {
   private nodesPollInterval: number | null = null;
   private logsPollInterval: number | null = null;
   private debugPollInterval: number | null = null;
+  private wecomKfPollInterval: number | null = null;
   private logsScrollFrame: number | null = null;
   private toolStreamById = new Map<string, ToolStreamEntry>();
   private toolStreamOrder: string[] = [];
@@ -442,6 +466,10 @@ export class wehelperApp extends LitElement {
 
   async handleWecomKfStop() {
     await stopWecomKfInternal(this);
+  }
+
+  async handleWecomKfUnbind() {
+    await unbindWecomKfDeviceInternal(this);
   }
 
   handleNostrProfileEdit(accountId: string, profile: NostrProfile | null) {

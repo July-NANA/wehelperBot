@@ -9,6 +9,10 @@ export type WecomKfTunnelConfig = {
 
 export type WecomKfConfig = {
   enabled: boolean;
+  serverBaseUrl: string;
+  deviceId: string;
+  localAgentId: string;
+  localAgentTimeoutSeconds: number;
   corpId: string;
   token: string;
   aesKey: string;
@@ -21,6 +25,10 @@ export type WecomKfConfig = {
 };
 
 export type WecomKfStartParams = {
+  serverBaseUrl?: string;
+  deviceId?: string;
+  localAgentId?: string;
+  localAgentTimeoutSeconds?: number;
   corpId?: string;
   token?: string;
   aesKey?: string;
@@ -43,6 +51,10 @@ const DEFAULT_TUNNEL: WecomKfTunnelConfig = {
 
 const DEFAULTS: WecomKfConfig = {
   enabled: true,
+  serverBaseUrl: "",
+  deviceId: "",
+  localAgentId: "main",
+  localAgentTimeoutSeconds: 180,
   corpId: "",
   token: "",
   aesKey: "",
@@ -93,6 +105,13 @@ export function resolveWecomKfConfig(value: unknown): WecomKfConfig {
 
   return {
     enabled: toBoolean(raw.enabled, DEFAULTS.enabled),
+    serverBaseUrl: toString(raw.serverBaseUrl),
+    deviceId: toString(raw.deviceId),
+    localAgentId: toString(raw.localAgentId) || DEFAULTS.localAgentId,
+    localAgentTimeoutSeconds: toNumber(
+      raw.localAgentTimeoutSeconds,
+      DEFAULTS.localAgentTimeoutSeconds,
+    ),
     corpId: toString(raw.corpId),
     token: toString(raw.token),
     aesKey: toString(raw.aesKey),
@@ -115,6 +134,10 @@ export function applyStartOverrides(
   const tunnel = overrides.tunnel ? { ...base.tunnel, ...overrides.tunnel } : base.tunnel;
   return {
     ...base,
+    serverBaseUrl: overrides.serverBaseUrl?.trim() ?? base.serverBaseUrl,
+    deviceId: overrides.deviceId?.trim() ?? base.deviceId,
+    localAgentId: overrides.localAgentId?.trim() ?? base.localAgentId,
+    localAgentTimeoutSeconds: overrides.localAgentTimeoutSeconds ?? base.localAgentTimeoutSeconds,
     corpId: overrides.corpId?.trim() ?? base.corpId,
     token: overrides.token?.trim() ?? base.token,
     aesKey: overrides.aesKey?.trim() ?? base.aesKey,

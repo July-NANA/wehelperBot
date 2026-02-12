@@ -16,6 +16,7 @@ const plugin = {
   register(api: OpenClawPluginApi) {
     const runtime = createWecomKfRuntime({
       logger: api.logger,
+      runtime: api.runtime,
       stateDir: api.runtime.state.resolveStateDir(),
       wehelperDir: api.resolvePath("../wehelper"),
     });
@@ -38,6 +39,8 @@ const plugin = {
           : undefined;
       return resolveWecomKfConfig(pluginConfig);
     };
+
+    runtime.startDevicePolling(loadConfig);
 
     api.registerGatewayMethod("wecom_kf.status", async ({ respond }) => {
       try {
@@ -67,6 +70,44 @@ const plugin = {
         const cfg = await loadConfig();
         const status = await runtime.stop(cfg);
         respond(true, status);
+      } catch (err) {
+        respond(false, { error: err instanceof Error ? err.message : String(err) });
+      }
+    });
+
+    api.registerGatewayMethod("wecom_kf.device.status", async ({ respond }) => {
+      try {
+        const cfg = await loadConfig();
+        respond(true, runtime.status(cfg).device);
+      } catch (err) {
+        respond(false, { error: err instanceof Error ? err.message : String(err) });
+      }
+    });
+
+    api.registerGatewayMethod("wecom_kf.device.sync", async ({ respond }) => {
+      try {
+        const cfg = await loadConfig();
+        const current = await runtime.syncDeviceNow(cfg, true);
+        respond(true, current.device);
+      } catch (err) {
+        respond(false, { error: err instanceof Error ? err.message : String(err) });
+      }
+    });
+
+    api.registerGatewayMethod("wecom_kf.device.unbind", async ({ respond }) => {
+      try {
+        const cfg = await loadConfig();
+        const current = await runtime.unbindDeviceNow(cfg);
+        respond(true, current.device);
+      } catch (err) {
+        respond(false, { error: err instanceof Error ? err.message : String(err) });
+      }
+    });
+
+    api.registerGatewayMethod("wecom_kf.link.status", async ({ respond }) => {
+      try {
+        const cfg = await loadConfig();
+        respond(true, runtime.status(cfg).device);
       } catch (err) {
         respond(false, { error: err instanceof Error ? err.message : String(err) });
       }

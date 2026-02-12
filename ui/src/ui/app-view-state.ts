@@ -91,6 +91,27 @@ export type AppViewState = {
   configForm: Record<string, unknown> | null;
   configFormOriginal: Record<string, unknown> | null;
   configFormMode: "form" | "raw";
+  providersFilterText: string;
+  providersExpandedIds: string[];
+  providersSelectedId: string | null;
+  supplierDialogMode: "none" | "add" | "rename" | "delete";
+  supplierDialogTargetId: string | null;
+  supplierDraftName: string;
+  supplierDraftType:
+    | "openai-compatible"
+    | "openai-responses"
+    | "anthropic"
+    | "gemini"
+    | "azure-openai"
+    | "ollama"
+    | "custom";
+  supplierDefaultId: string | null;
+  supplierModelDialogMode: "none" | "add" | "edit" | "delete";
+  supplierModelDialogSupplierId: string | null;
+  supplierModelDialogTargetIndex: number | null;
+  supplierModelDraftId: string;
+  supplierModelDraftName: string;
+  supplierModelsManageMode: "simple" | "advanced";
   channelsLoading: boolean;
   channelsSnapshot: ChannelsStatusSnapshot | null;
   channelsError: string | null;

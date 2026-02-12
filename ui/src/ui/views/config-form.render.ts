@@ -314,8 +314,11 @@ export const SECTION_META: Record<string, { label: string; description: string }
     description: t("User interface preferences", "界面偏好设置"),
   },
   models: {
-    label: t("Models", "模型"),
-    description: t("AI model configurations and providers", "模型配置与提供方"),
+    label: t("Models & Providers", "模型与 Provider"),
+    description: t(
+      "AI model catalog, provider endpoints, and provider credentials.",
+      "AI 模型目录、Provider 接入地址与凭据配置。",
+    ),
   },
   bindings: {
     label: t("Bindings", "绑定"),

@@ -258,6 +258,12 @@ export async function refreshActiveTab(host: SettingsHost) {
     await loadConfigSchema(host as unknown as wehelperApp);
     await loadConfig(host as unknown as wehelperApp);
   }
+  if (host.tab === "providers") {
+    const app = host as unknown as wehelperApp;
+    app.configFormMode = "form";
+    await loadConfigSchema(host as unknown as wehelperApp);
+    await loadConfig(app);
+  }
   if (host.tab === "debug") {
     await loadDebug(host as unknown as wehelperApp);
     host.eventLog = host.eventLogBuffer;

@@ -7,6 +7,8 @@ import {
   stopNodesPolling,
   startDebugPolling,
   stopDebugPolling,
+  startWecomKfPolling,
+  stopWecomKfPolling,
 } from "./app-polling.ts";
 import { observeTopbar, scheduleChatScroll, scheduleLogsScroll } from "./app-scroll.ts";
 import {
@@ -21,6 +23,7 @@ import {
 type LifecycleHost = {
   basePath: string;
   tab: Tab;
+  connected: boolean;
   chatHasAutoScrolled: boolean;
   chatLoading: boolean;
   chatMessages: unknown[];
@@ -29,6 +32,7 @@ type LifecycleHost = {
   logsAutoFollow: boolean;
   logsAtBottom: boolean;
   logsEntries: unknown[];
+  wecomKfPollInterval: number | null;
   popStateHandler: () => void;
   topbarObserver: ResizeObserver | null;
 };
@@ -42,6 +46,7 @@ export function handleConnected(host: LifecycleHost) {
   window.addEventListener("popstate", host.popStateHandler);
   connectGateway(host as unknown as Parameters<typeof connectGateway>[0]);
   startNodesPolling(host as unknown as Parameters<typeof startNodesPolling>[0]);
+  startWecomKfPolling(host as unknown as Parameters<typeof startWecomKfPolling>[0]);
   if (host.tab === "logs") {
     startLogsPolling(host as unknown as Parameters<typeof startLogsPolling>[0]);
   }
@@ -57,6 +62,7 @@ export function handleFirstUpdated(host: LifecycleHost) {
 export function handleDisconnected(host: LifecycleHost) {
   window.removeEventListener("popstate", host.popStateHandler);
   stopNodesPolling(host as unknown as Parameters<typeof stopNodesPolling>[0]);
+  stopWecomKfPolling(host as unknown as Parameters<typeof stopWecomKfPolling>[0]);
   stopLogsPolling(host as unknown as Parameters<typeof stopLogsPolling>[0]);
   stopDebugPolling(host as unknown as Parameters<typeof stopDebugPolling>[0]);
   detachThemeListener(host as unknown as Parameters<typeof detachThemeListener>[0]);

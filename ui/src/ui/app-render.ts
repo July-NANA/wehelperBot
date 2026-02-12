@@ -66,8 +66,10 @@ import { renderInstances } from "./views/instances.ts";
 import { renderLogs } from "./views/logs.ts";
 import { renderNodes } from "./views/nodes.ts";
 import { renderOverview } from "./views/overview.ts";
+import { renderProvidersConfig } from "./views/providers-config.ts";
 import { renderSessions } from "./views/sessions.ts";
 import { renderSkills } from "./views/skills.ts";
+import { createSupplierFromPreset, type SupplierPresetType } from "./views/supplier-presets.ts";
 import { renderWecomKf } from "./views/wecom-kf.ts";
 
 const AVATAR_DATA_RE = /^data:/i;
@@ -108,6 +110,45 @@ export function renderApp(state: AppViewState) {
     state.agentsList?.defaultId ??
     state.agentsList?.agents?.[0]?.id ??
     null;
+  const primaryModelRef =
+    (
+      (state.configForm?.agents as Record<string, unknown> | undefined)?.defaults as
+        | Record<string, unknown>
+        | undefined
+    )?.model &&
+    typeof (
+      (
+        (state.configForm?.agents as Record<string, unknown> | undefined)?.defaults as
+          | Record<string, unknown>
+          | undefined
+      )?.model as Record<string, unknown>
+    ).primary === "string"
+      ? ((
+          (
+            (state.configForm?.agents as Record<string, unknown> | undefined)?.defaults as
+              | Record<string, unknown>
+              | undefined
+          )?.model as Record<string, unknown>
+        ).primary as string)
+      : "";
+  const derivedSupplierDefaultId =
+    primaryModelRef && primaryModelRef.includes("/") ? primaryModelRef.split("/")[0] : null;
+  const resolveProviderMap = (): Record<string, unknown> =>
+    ((state.configForm?.models as Record<string, unknown> | undefined)?.providers as
+      | Record<string, unknown>
+      | undefined) ?? {};
+  const resolveProviderModels = (supplierId: string): Array<Record<string, unknown>> => {
+    const provider = resolveProviderMap()[supplierId] as Record<string, unknown> | undefined;
+    const models = provider?.models;
+    return Array.isArray(models) ? (models as Array<Record<string, unknown>>) : [];
+  };
+  const resolvePrimaryModelRef = (): string => {
+    const defaults = (state.configForm?.agents as Record<string, unknown> | undefined)?.defaults as
+      | Record<string, unknown>
+      | undefined;
+    const model = defaults?.model as Record<string, unknown> | undefined;
+    return typeof model?.primary === "string" ? model.primary : "";
+  };
 
   return html`
     <div class="shell ${isChat ? "shell--chat" : ""} ${chatFocus ? "shell--chat-focus" : ""} ${state.settings.navCollapsed ? "shell--nav-collapsed" : ""} ${state.onboarding ? "shell--onboarding" : ""}">
@@ -293,6 +334,7 @@ export function renderApp(state: AppViewState) {
                 onRefresh: () => state.handleWecomKfRefresh(),
                 onStart: (config) => state.handleWecomKfStart(config),
                 onStop: () => state.handleWecomKfStop(),
+                onUnbind: () => state.handleWecomKfUnbind(),
               })
             : nothing
         }
@@ -973,6 +1015,382 @@ export function renderApp(state: AppViewState) {
                 },
                 onSubsectionChange: (section) =>
                   ((state as unknown as wehelperApp).configActiveSubsection = section),
+                onReload: () => loadConfig(state as unknown as wehelperApp),
+                onSave: () => saveConfig(state as unknown as wehelperApp),
+                onApply: () => applyConfig(state as unknown as wehelperApp),
+                onUpdate: () => runUpdate(state as unknown as wehelperApp),
+              })
+            : nothing
+        }
+
+        ${
+          state.tab === "providers"
+            ? renderProvidersConfig({
+                valid: state.configValid,
+                issues: state.configIssues,
+                loading: state.configLoading,
+                saving: state.configSaving,
+                applying: state.configApplying,
+                updating: state.updateRunning,
+                connected: state.connected,
+                schema: state.configSchema,
+                schemaLoading: state.configSchemaLoading,
+                uiHints: state.configUiHints as ConfigUiHints,
+                formValue: state.configForm,
+                originalValue: state.configFormOriginal,
+                filterText: state.providersFilterText,
+                selectedId: state.providersSelectedId,
+                defaultSupplierId: derivedSupplierDefaultId,
+                dialogMode: state.supplierDialogMode,
+                dialogTargetId: state.supplierDialogTargetId,
+                draftName: state.supplierDraftName,
+                draftType: state.supplierDraftType,
+                modelDialogMode: state.supplierModelDialogMode,
+                modelDialogSupplierId: state.supplierModelDialogSupplierId,
+                modelDialogTargetIndex: state.supplierModelDialogTargetIndex,
+                modelDraftId: state.supplierModelDraftId,
+                modelDraftName: state.supplierModelDraftName,
+                modelsManageMode: state.supplierModelsManageMode,
+                onFilterChange: (next) => {
+                  state.providersFilterText = next;
+                },
+                onSelectSupplier: (supplierId) => {
+                  state.providersSelectedId = supplierId;
+                },
+                onOpenAddDialog: () => {
+                  state.supplierDialogMode = "add";
+                  state.supplierDialogTargetId = null;
+                  state.supplierDraftName = "";
+                  state.supplierDraftType = "openai-compatible";
+                },
+                onOpenRenameDialog: (supplierId) => {
+                  state.supplierDialogMode = "rename";
+                  state.supplierDialogTargetId = supplierId;
+                  state.supplierDraftName = supplierId;
+                },
+                onOpenDeleteDialog: (supplierId) => {
+                  state.supplierDialogMode = "delete";
+                  state.supplierDialogTargetId = supplierId;
+                },
+                onCloseDialog: () => {
+                  state.supplierDialogMode = "none";
+                  state.supplierDialogTargetId = null;
+                },
+                onDraftNameChange: (name) => {
+                  state.supplierDraftName = name;
+                },
+                onDraftTypeChange: (type) => {
+                  state.supplierDraftType = type as SupplierPresetType;
+                },
+                onConfirmAddSupplier: () => {
+                  const name = state.supplierDraftName.trim();
+                  if (!name) {
+                    state.lastError = "供应商名称不能为空";
+                    return;
+                  }
+                  const providers =
+                    ((state.configForm?.models as Record<string, unknown> | undefined)?.providers as
+                      | Record<string, unknown>
+                      | undefined) ?? {};
+                  if (Object.prototype.hasOwnProperty.call(providers, name)) {
+                    state.lastError = `供应商 "${name}" 已存在`;
+                    return;
+                  }
+                  updateConfigFormValue(
+                    state as unknown as wehelperApp,
+                    ["models", "providers", name],
+                    createSupplierFromPreset(state.supplierDraftType),
+                  );
+                  state.providersSelectedId = name;
+                  state.supplierDialogMode = "none";
+                  state.supplierDialogTargetId = null;
+                  state.lastError = null;
+                },
+                onConfirmDeleteSupplier: () => {
+                  const supplierId = state.supplierDialogTargetId;
+                  if (!supplierId) {
+                    return;
+                  }
+                  removeConfigFormValue(state as unknown as wehelperApp, [
+                    "models",
+                    "providers",
+                    supplierId,
+                  ]);
+                  if (derivedSupplierDefaultId === supplierId) {
+                    updateConfigFormValue(
+                      state as unknown as wehelperApp,
+                      ["agents", "defaults", "model", "primary"],
+                      "",
+                    );
+                    state.lastError = "默认供应商已删除，请重新选择默认供应商";
+                  }
+                  const remaining = (((
+                    state.configForm?.models as Record<string, unknown> | undefined
+                  )?.providers as Record<string, unknown> | undefined) ?? {}) as Record<
+                    string,
+                    unknown
+                  >;
+                  const nextSelected =
+                    Object.keys(remaining).sort((a, b) => a.localeCompare(b))[0] ?? null;
+                  state.providersSelectedId = nextSelected;
+                  state.supplierDialogMode = "none";
+                  state.supplierDialogTargetId = null;
+                  state.lastError = null;
+                },
+                onConfirmRenameSupplier: () => {
+                  const supplierId = state.supplierDialogTargetId;
+                  const nextSupplierId = state.supplierDraftName.trim();
+                  if (!supplierId) {
+                    return;
+                  }
+                  if (!nextSupplierId) {
+                    state.lastError = "供应商名称不能为空";
+                    return;
+                  }
+                  if (supplierId === nextSupplierId) {
+                    state.supplierDialogMode = "none";
+                    state.supplierDialogTargetId = null;
+                    return;
+                  }
+                  const models =
+                    (state.configForm?.models as Record<string, unknown> | undefined) ?? {};
+                  const providers = (models.providers as Record<string, unknown> | undefined) ?? {};
+                  if (Object.prototype.hasOwnProperty.call(providers, nextSupplierId)) {
+                    state.lastError = `供应商 "${nextSupplierId}" 已存在`;
+                    return;
+                  }
+                  const providerValue = providers[supplierId];
+                  if (providerValue === undefined) {
+                    return;
+                  }
+                  const nextProviders: Record<string, unknown> = {};
+                  for (const key of Object.keys(providers)) {
+                    if (key === supplierId) {
+                      continue;
+                    }
+                    nextProviders[key] = providers[key];
+                  }
+                  nextProviders[nextSupplierId] = providerValue;
+                  updateConfigFormValue(
+                    state as unknown as wehelperApp,
+                    ["models", "providers"],
+                    nextProviders,
+                  );
+                  if (state.providersSelectedId === supplierId) {
+                    state.providersSelectedId = nextSupplierId;
+                  }
+
+                  const currentPrimaryRef = resolvePrimaryModelRef();
+                  if (currentPrimaryRef && currentPrimaryRef.startsWith(`${supplierId}/`)) {
+                    const oldModelId = currentPrimaryRef.slice(supplierId.length + 1);
+                    const modelIds =
+                      (
+                        (providerValue as Record<string, unknown>)?.models as
+                          | Array<Record<string, unknown>>
+                          | undefined
+                      )
+                        ?.map((item) => (typeof item?.id === "string" ? item.id.trim() : ""))
+                        .filter((item) => item.length > 0) ?? [];
+                    const resolvedModelId = modelIds.includes(oldModelId)
+                      ? oldModelId
+                      : (modelIds[0] ?? "");
+                    updateConfigFormValue(
+                      state as unknown as wehelperApp,
+                      ["agents", "defaults", "model", "primary"],
+                      resolvedModelId ? `${nextSupplierId}/${resolvedModelId}` : "",
+                    );
+                  }
+                  state.supplierDialogMode = "none";
+                  state.supplierDialogTargetId = null;
+                  state.lastError = null;
+                },
+                onSetDefaultSupplier: (supplierId) => {
+                  const provider = resolveProviderMap()[supplierId] as
+                    | Record<string, unknown>
+                    | undefined;
+                  const modelIds =
+                    (
+                      (provider as Record<string, unknown> | undefined)?.models as
+                        | Array<Record<string, unknown>>
+                        | undefined
+                    )
+                      ?.map((item) => (typeof item?.id === "string" ? item.id.trim() : ""))
+                      .filter((item) => item.length > 0) ?? [];
+                  const firstModelId = modelIds[0];
+                  if (!firstModelId) {
+                    state.lastError = "请先为该供应商配置至少一个模型";
+                    return;
+                  }
+                  updateConfigFormValue(
+                    state as unknown as wehelperApp,
+                    ["agents", "defaults", "model", "primary"],
+                    `${supplierId}/${firstModelId}`,
+                  );
+                  state.supplierDefaultId = supplierId;
+                  state.lastError = null;
+                },
+                onOpenAddModelDialog: (supplierId) => {
+                  state.supplierModelDialogMode = "add";
+                  state.supplierModelDialogSupplierId = supplierId;
+                  state.supplierModelDialogTargetIndex = null;
+                  state.supplierModelDraftId = "";
+                  state.supplierModelDraftName = "";
+                },
+                onOpenEditModelDialog: (supplierId, index) => {
+                  const models = resolveProviderModels(supplierId);
+                  const model = models[index] ?? null;
+                  state.supplierModelDialogMode = "edit";
+                  state.supplierModelDialogSupplierId = supplierId;
+                  state.supplierModelDialogTargetIndex = index;
+                  state.supplierModelDraftId = typeof model?.id === "string" ? model.id : "";
+                  state.supplierModelDraftName = typeof model?.name === "string" ? model.name : "";
+                },
+                onOpenDeleteModelDialog: (supplierId, index) => {
+                  const models = resolveProviderModels(supplierId);
+                  const model = models[index] ?? null;
+                  state.supplierModelDialogMode = "delete";
+                  state.supplierModelDialogSupplierId = supplierId;
+                  state.supplierModelDialogTargetIndex = index;
+                  state.supplierModelDraftId = typeof model?.id === "string" ? model.id : "";
+                  state.supplierModelDraftName = typeof model?.name === "string" ? model.name : "";
+                },
+                onCloseModelDialog: () => {
+                  state.supplierModelDialogMode = "none";
+                  state.supplierModelDialogSupplierId = null;
+                  state.supplierModelDialogTargetIndex = null;
+                },
+                onModelDraftIdChange: (value) => {
+                  state.supplierModelDraftId = value;
+                },
+                onModelDraftNameChange: (value) => {
+                  state.supplierModelDraftName = value;
+                },
+                onConfirmAddModel: () => {
+                  const supplierId = state.supplierModelDialogSupplierId;
+                  if (!supplierId) {
+                    return;
+                  }
+                  const nextId = state.supplierModelDraftId.trim();
+                  const nextName = state.supplierModelDraftName.trim() || nextId;
+                  if (!nextId) {
+                    state.lastError = "模型 ID 不能为空";
+                    return;
+                  }
+                  const models = resolveProviderModels(supplierId);
+                  if (
+                    models.some(
+                      (model) => typeof model.id === "string" && model.id.trim() === nextId,
+                    )
+                  ) {
+                    state.lastError = `模型 ID "${nextId}" 已存在`;
+                    return;
+                  }
+                  const nextModels = [...models, { id: nextId, name: nextName }];
+                  updateConfigFormValue(
+                    state as unknown as wehelperApp,
+                    ["models", "providers", supplierId, "models"],
+                    nextModels,
+                  );
+                  state.supplierModelDialogMode = "none";
+                  state.supplierModelDialogSupplierId = null;
+                  state.supplierModelDialogTargetIndex = null;
+                  state.lastError = null;
+                },
+                onConfirmEditModel: () => {
+                  const supplierId = state.supplierModelDialogSupplierId;
+                  const targetIndex = state.supplierModelDialogTargetIndex;
+                  if (!supplierId || targetIndex == null) {
+                    return;
+                  }
+                  const models = resolveProviderModels(supplierId);
+                  const current = models[targetIndex];
+                  if (!current) {
+                    return;
+                  }
+                  const nextId = state.supplierModelDraftId.trim();
+                  const nextName = state.supplierModelDraftName.trim() || nextId;
+                  if (!nextId) {
+                    state.lastError = "模型 ID 不能为空";
+                    return;
+                  }
+                  const duplicated = models.some(
+                    (model, index) =>
+                      index !== targetIndex &&
+                      typeof model.id === "string" &&
+                      model.id.trim() === nextId,
+                  );
+                  if (duplicated) {
+                    state.lastError = `模型 ID "${nextId}" 已存在`;
+                    return;
+                  }
+                  const currentId = typeof current.id === "string" ? current.id.trim() : "";
+                  const nextModels = models.map((model, index) =>
+                    index === targetIndex
+                      ? ({ ...model, id: nextId, name: nextName } as Record<string, unknown>)
+                      : model,
+                  );
+                  updateConfigFormValue(
+                    state as unknown as wehelperApp,
+                    ["models", "providers", supplierId, "models"],
+                    nextModels,
+                  );
+
+                  const currentPrimaryRef = resolvePrimaryModelRef();
+                  if (currentId && currentPrimaryRef === `${supplierId}/${currentId}`) {
+                    updateConfigFormValue(
+                      state as unknown as wehelperApp,
+                      ["agents", "defaults", "model", "primary"],
+                      `${supplierId}/${nextId}`,
+                    );
+                  }
+                  state.supplierModelDialogMode = "none";
+                  state.supplierModelDialogSupplierId = null;
+                  state.supplierModelDialogTargetIndex = null;
+                  state.lastError = null;
+                },
+                onConfirmDeleteModel: () => {
+                  const supplierId = state.supplierModelDialogSupplierId;
+                  const targetIndex = state.supplierModelDialogTargetIndex;
+                  if (!supplierId || targetIndex == null) {
+                    return;
+                  }
+                  const models = resolveProviderModels(supplierId);
+                  const current = models[targetIndex];
+                  if (!current) {
+                    return;
+                  }
+                  const currentId = typeof current.id === "string" ? current.id.trim() : "";
+                  const nextModels = models.filter((_, index) => index !== targetIndex);
+                  updateConfigFormValue(
+                    state as unknown as wehelperApp,
+                    ["models", "providers", supplierId, "models"],
+                    nextModels,
+                  );
+
+                  const currentPrimaryRef = resolvePrimaryModelRef();
+                  if (currentId && currentPrimaryRef === `${supplierId}/${currentId}`) {
+                    const fallback = nextModels
+                      .map((model) => (typeof model.id === "string" ? model.id.trim() : ""))
+                      .find((id) => id.length > 0);
+                    updateConfigFormValue(
+                      state as unknown as wehelperApp,
+                      ["agents", "defaults", "model", "primary"],
+                      fallback ? `${supplierId}/${fallback}` : "",
+                    );
+                    if (!fallback) {
+                      state.lastError = "默认模型已删除，请重新选择默认供应商";
+                    }
+                  }
+
+                  state.supplierModelDialogMode = "none";
+                  state.supplierModelDialogSupplierId = null;
+                  state.supplierModelDialogTargetIndex = null;
+                },
+                onToggleModelsManageMode: (mode) => {
+                  state.supplierModelsManageMode = mode;
+                },
+                onFormPatch: (path, value) =>
+                  updateConfigFormValue(state as unknown as wehelperApp, path, value),
                 onReload: () => loadConfig(state as unknown as wehelperApp),
                 onSave: () => saveConfig(state as unknown as wehelperApp),
                 onApply: () => applyConfig(state as unknown as wehelperApp),

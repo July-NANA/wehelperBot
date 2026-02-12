@@ -5,6 +5,10 @@
     "additionalProperties": false,
     "properties": {
       "enabled": { "type": "boolean", "default": true },
+      "serverBaseUrl": { "type": "string" },
+      "deviceId": { "type": "string" },
+      "localAgentId": { "type": "string", "default": "main" },
+      "localAgentTimeoutSeconds": { "type": "number", "default": 180 },
       "corpId": { "type": "string" },
       "token": { "type": "string" },
       "aesKey": { "type": "string" },
@@ -29,6 +33,10 @@
   },
   "uiHints": {
     "enabled": { "label": "Enable WeCom KF" },
+    "serverBaseUrl": { "label": "Server Base URL" },
+    "deviceId": { "label": "Device ID (optional)" },
+    "localAgentId": { "label": "Local Agent ID", "advanced": true },
+    "localAgentTimeoutSeconds": { "label": "Local Agent Timeout (s)", "advanced": true },
     "corpId": { "label": "WE_COM_KF_CORP_ID" },
     "token": { "label": "WE_COM_KF_TOKEN", "sensitive": true },
     "aesKey": { "label": "WE_COM_KF_AES_KEY", "sensitive": true },

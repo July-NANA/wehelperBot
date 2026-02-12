@@ -2,11 +2,15 @@ import type { wehelperApp } from "./app.ts";
 import { loadDebug } from "./controllers/debug.ts";
 import { loadLogs } from "./controllers/logs.ts";
 import { loadNodes } from "./controllers/nodes.ts";
+import { loadWecomKfStatus } from "./controllers/wecom-kf.ts";
+const WECOM_KF_POLL_MS = 15_000;
 
 type PollingHost = {
   nodesPollInterval: number | null;
   logsPollInterval: number | null;
   debugPollInterval: number | null;
+  wecomKfPollInterval: number | null;
+  connected: boolean;
   tab: string;
 };
 
@@ -66,4 +70,24 @@ export function stopDebugPolling(host: PollingHost) {
   }
   clearInterval(host.debugPollInterval);
   host.debugPollInterval = null;
+}
+
+export function startWecomKfPolling(host: PollingHost) {
+  if (host.wecomKfPollInterval != null) {
+    return;
+  }
+  host.wecomKfPollInterval = window.setInterval(() => {
+    if (!host.connected) {
+      return;
+    }
+    void loadWecomKfStatus(host as unknown as wehelperApp, { quiet: true });
+  }, WECOM_KF_POLL_MS);
+}
+
+export function stopWecomKfPolling(host: PollingHost) {
+  if (host.wecomKfPollInterval == null) {
+    return;
+  }
+  clearInterval(host.wecomKfPollInterval);
+  host.wecomKfPollInterval = null;
 }

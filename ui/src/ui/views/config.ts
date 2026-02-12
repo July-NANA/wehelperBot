@@ -384,6 +384,55 @@ function truncateValue(value: unknown, maxLen = 40): string {
   return str.slice(0, maxLen - 3) + "...";
 }
 
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  return value as Record<string, unknown>;
+}
+
+function resolveProviderSummary(formValue: Record<string, unknown> | null): {
+  providerCount: number;
+  modelCount: number;
+  primaryModel: string | null;
+  imageModel: string | null;
+  providerNames: string[];
+} {
+  const models = asRecord(formValue?.models);
+  const providers = asRecord(models?.providers);
+  const providerNames = providers ? Object.keys(providers).sort((a, b) => a.localeCompare(b)) : [];
+
+  let modelCount = 0;
+  for (const providerName of providerNames) {
+    const provider = asRecord(providers?.[providerName]);
+    const modelsValue = provider?.models;
+    if (Array.isArray(modelsValue)) {
+      modelCount += modelsValue.length;
+    }
+  }
+
+  const agents = asRecord(formValue?.agents);
+  const defaults = asRecord(agents?.defaults);
+  const modelConfig = asRecord(defaults?.model);
+  const imageModelConfig = asRecord(defaults?.imageModel);
+  const primaryModel =
+    typeof modelConfig?.primary === "string" && modelConfig.primary.trim()
+      ? modelConfig.primary.trim()
+      : null;
+  const imageModel =
+    typeof imageModelConfig?.primary === "string" && imageModelConfig.primary.trim()
+      ? imageModelConfig.primary.trim()
+      : null;
+
+  return {
+    providerCount: providerNames.length,
+    modelCount,
+    primaryModel,
+    imageModel,
+    providerNames,
+  };
+}
+
 export function renderConfig(props: ConfigProps) {
   const validity = props.valid == null ? "unknown" : props.valid ? "valid" : "invalid";
   const analysis = analyzeConfigSchema(props.schema);
@@ -400,6 +449,8 @@ export function renderConfig(props: ConfigProps) {
     .map((k) => ({ key: k, label: k.charAt(0).toUpperCase() + k.slice(1) }));
 
   const allSections = [...availableSections, ...extraSections];
+  const hasModelsSection = allSections.some((section) => section.key === "models");
+  const providerSummary = resolveProviderSummary(props.formValue);
 
   const activeSectionSchema =
     props.activeSection && analysis.schema && schemaType(analysis.schema) === "object"
@@ -654,6 +705,69 @@ export function renderConfig(props: ConfigProps) {
                       </div>`
                       : nothing
                   }
+                </div>
+              </div>
+            `
+            : nothing
+        }
+        ${
+          props.formMode === "form"
+            ? html`
+              <div class="config-section-hero" style="margin-top: 12px;">
+                <div class="config-section-hero__icon">${sidebarIcons.models}</div>
+                <div class="config-section-hero__text" style="display: flex; gap: 12px; flex-wrap: wrap;">
+                  <div style="min-width: 220px;">
+                    <div class="config-section-hero__title">
+                      ${t("Provider Config", "Provider 配置")}
+                    </div>
+                    <div class="config-section-hero__desc">
+                      ${t(
+                        "Quick entry to model providers and current summary.",
+                        "快速进入模型 Provider 配置，并查看当前状态摘要。",
+                      )}
+                    </div>
+                  </div>
+                  <div class="muted" style="display: grid; gap: 4px; min-width: 260px;">
+                    <div>
+                      ${t("Providers", "Provider 数量")}: ${providerSummary.providerCount}
+                    </div>
+                    <div>
+                      ${t("Models", "模型数量")}: ${providerSummary.modelCount}
+                    </div>
+                    <div>
+                      ${t("Primary Model", "主模型")}: ${
+                        providerSummary.primaryModel
+                          ? html`<span class="mono">${providerSummary.primaryModel}</span>`
+                          : "-"
+                      }
+                    </div>
+                    <div>
+                      ${t("Image Model", "图像模型")}: ${
+                        providerSummary.imageModel
+                          ? html`<span class="mono">${providerSummary.imageModel}</span>`
+                          : "-"
+                      }
+                    </div>
+                    <div>
+                      ${t("Provider List", "Provider 列表")}: ${
+                        providerSummary.providerNames.length > 0
+                          ? html`<span class="mono">${providerSummary.providerNames.join(", ")}</span>`
+                          : "-"
+                      }
+                    </div>
+                  </div>
+                </div>
+                <div style="margin-left: auto;">
+                  <button
+                    class="btn btn--sm primary"
+                    ?disabled=${!hasModelsSection}
+                    @click=${() => {
+                      props.onSectionChange("models");
+                      props.onSubsectionChange("providers");
+                    }}
+                  >
+                    ${t("Open Provider Settings", "打开 Provider 配置")}
+                  </button>
                 </div>
               </div>
             `

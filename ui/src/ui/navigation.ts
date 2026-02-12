@@ -8,7 +8,7 @@ export const TAB_GROUPS = [
     tabs: ["overview", "channels", "wecom", "instances", "sessions", "cron"],
   },
   { label: t("Agent", "助手"), tabs: ["agents", "skills", "nodes"] },
-  { label: t("Settings", "设置"), tabs: ["config", "debug", "logs"] },
+  { label: t("Settings", "设置"), tabs: ["providers", "config", "debug", "logs"] },
 ] as const;
 
 export type Tab =
@@ -22,6 +22,7 @@ export type Tab =
   | "skills"
   | "nodes"
   | "chat"
+  | "providers"
   | "config"
   | "debug"
   | "logs";
@@ -37,6 +38,7 @@ const TAB_PATHS: Record<Tab, string> = {
   skills: "/skills",
   nodes: "/nodes",
   chat: "/chat",
+  providers: "/providers",
   config: "/config",
   debug: "/debug",
   logs: "/logs",
@@ -147,6 +149,8 @@ export function iconForTab(tab: Tab): IconName {
       return "monitor";
     case "config":
       return "settings";
+    case "providers":
+      return "folder";
     case "debug":
       return "bug";
     case "logs":
@@ -180,6 +184,8 @@ export function titleForTab(tab: Tab) {
       return t("Chat", "对话");
     case "config":
       return t("Config", "配置");
+    case "providers":
+      return t("Suppliers", "供应商配置");
     case "debug":
       return t("Debug", "调试");
     case "logs":
@@ -234,6 +240,11 @@ export function subtitleForTab(tab: Tab) {
       );
     case "config":
       return t("Edit ~/.openclaw/openclaw.json safely.", "安全编辑 ~/.openclaw/openclaw.json。");
+    case "providers":
+      return t(
+        "Operations console for model suppliers, credentials, and model mappings.",
+        "运营控制台：管理模型供应商、凭据与模型映射。",
+      );
     case "debug":
       return t(
         "Gateway snapshots, events, and manual RPC calls.",
