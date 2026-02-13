@@ -63,12 +63,12 @@ jobs:
       - name: Install desktop dependencies
         run: |
           set -euo pipefail
-          pnpm --dir "${{ steps.desktop.outputs.dir }}" install --no-frozen-lockfile
+          pnpm --dir "${{ steps.desktop.outputs.dir }}" --ignore-workspace install --no-frozen-lockfile
 
       - name: Build desktop (${{ matrix.target }})
         run: |
           set -euo pipefail
-          pnpm --dir "${{ steps.desktop.outputs.dir }}" "${{ matrix.build_cmd }}"
+          pnpm --dir "${{ steps.desktop.outputs.dir }}" --ignore-workspace "${{ matrix.build_cmd }}"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
