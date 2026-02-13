@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "wehelper Desktop tray shell",
+  "author": "wehelper",
   "main": "src/main.cjs",
   "scripts": {
     "build:mac": "electron-builder --mac dmg --publish never",
@@ -35,10 +36,15 @@
       "artifactName": "wehelperDesktop-${version}-mac.dmg"
     },
     "win": {
+      "icon": "assets/icon.ico",
       "target": [
         "msi"
       ],
       "artifactName": "wehelperDesktop-${version}-win.msi"
+    },
+    "msi": {
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico"
     }
   }
 }
