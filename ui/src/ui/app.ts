@@ -202,6 +202,7 @@ export class wehelperApp extends LitElement {
     | "ollama"
     | "custom" = "openai-compatible";
   @state() supplierDefaultId: string | null = null;
+  @state() supplierDefaultNotice: string | null = null;
   @state() supplierModelDialogMode: "none" | "add" | "edit" | "delete" = "none";
   @state() supplierModelDialogSupplierId: string | null = null;
   @state() supplierModelDialogTargetIndex: number | null = null;

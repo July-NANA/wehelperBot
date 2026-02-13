@@ -318,6 +318,29 @@ export function createWecomKfRuntime(params: RuntimeParams) {
     return generated;
   };
 
+  const deviceIdLockPath = () => path.join(params.stateDir, "wecom_kf_last_device_id.txt");
+
+  const readLastDeviceId = (): string => {
+    ensureStateDir();
+    try {
+      return fs.readFileSync(deviceIdLockPath(), "utf-8").trim();
+    } catch {
+      return "";
+    }
+  };
+
+  const writeLastDeviceId = (deviceId: string): void => {
+    if (!deviceId) {
+      return;
+    }
+    ensureStateDir();
+    try {
+      fs.writeFileSync(deviceIdLockPath(), deviceId, "utf-8");
+    } catch (err) {
+      params.logger.warn(`[wecom-kf] failed to persist last device id: ${String(err)}`);
+    }
+  };
+
   const decodeNumber = (value: unknown): number | null => {
     if (typeof value === "number" && Number.isFinite(value)) {
       return value;
@@ -727,6 +750,7 @@ export function createWecomKfRuntime(params: RuntimeParams) {
   const syncDevice = async (cfg: WecomKfConfig, registerIfNeeded: boolean) => {
     const baseUrl = resolveServerBaseUrl(cfg);
     const deviceId = resolveDeviceId(cfg);
+    const previousDeviceId = readLastDeviceId();
     state.localAgentId = cfg.localAgentId.trim() || "main";
     state.localAgentTimeoutMs = Math.max(30_000, Math.floor(cfg.localAgentTimeoutSeconds * 1000));
 
@@ -748,6 +772,18 @@ export function createWecomKfRuntime(params: RuntimeParams) {
       return;
     }
 
+    if (previousDeviceId && previousDeviceId !== deviceId) {
+      const previousStatus = await fetchJson(
+        "GET",
+        `${baseUrl}/api/device/status?device_id=${encodeURIComponent(previousDeviceId)}`,
+      );
+      if (previousStatus.is_bound === true) {
+        throw new Error(
+          `device_id_change_requires_unbind: old_device_id=${previousDeviceId}, new_device_id=${deviceId}`,
+        );
+      }
+    }
+
     if (registerIfNeeded || (!state.deviceStatus.isBound && !state.deviceStatus.shortCode)) {
       const registerPayload = await fetchJson("POST", `${baseUrl}/api/device/register`, {
         device_id: deviceId,
@@ -760,6 +796,10 @@ export function createWecomKfRuntime(params: RuntimeParams) {
       `${baseUrl}/api/device/status?device_id=${encodeURIComponent(deviceId)}`,
     );
     applyDeviceSnapshot(statusPayload, { baseUrl, deviceId });
+
+    if (previousDeviceId && previousDeviceId !== deviceId && statusPayload.is_bound === true) {
+      throw new Error(`device_id_already_bound_global: device_id=${deviceId}`);
+    }
 
     if (!state.deviceStatus.connectToken) {
       const tokenPayload = await fetchJson(
@@ -774,6 +814,7 @@ export function createWecomKfRuntime(params: RuntimeParams) {
     } else {
       closeDeviceSocket();
     }
+    writeLastDeviceId(deviceId);
   };
 
   const unbindDevice = async (cfg: WecomKfConfig) => {

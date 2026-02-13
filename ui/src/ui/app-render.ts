@@ -133,10 +133,25 @@ export function renderApp(state: AppViewState) {
       : "";
   const derivedSupplierDefaultId =
     primaryModelRef && primaryModelRef.includes("/") ? primaryModelRef.split("/")[0] : null;
+  const defaultSupplierMissing = !(primaryModelRef && primaryModelRef.trim().length > 0);
   const resolveProviderMap = (): Record<string, unknown> =>
     ((state.configForm?.models as Record<string, unknown> | undefined)?.providers as
       | Record<string, unknown>
       | undefined) ?? {};
+  const getConfigPathString = (path: Array<string | number>): string => path.join(".");
+  const patchWecomConfig = (path: Array<string | number>, value: unknown) => {
+    const isDeviceIdPath = getConfigPathString(path) === "plugins.entries.wecom-kf.config.deviceId";
+    if (isDeviceIdPath && state.wecomKfStatus?.device?.isBound) {
+      const oldDeviceId = (state.wecomKfStatus.device.deviceId || "").trim();
+      const nextDeviceId = typeof value === "string" ? value.trim() : "";
+      if (oldDeviceId && nextDeviceId !== oldDeviceId) {
+        state.wecomKfError =
+          "设备已绑定，修改设备名前请先解绑当前设备（保持微信侧短码绑定流程不变）。";
+        return;
+      }
+    }
+    updateConfigFormValue(state as unknown as ConfigState, path, value);
+  };
   const resolveProviderModels = (supplierId: string): Array<Record<string, unknown>> => {
     const provider = resolveProviderMap()[supplierId] as Record<string, unknown> | undefined;
     const models = provider?.models;
@@ -325,11 +340,11 @@ export function renderApp(state: AppViewState) {
                 configForm: state.configForm,
                 configDirty: state.configFormDirty,
                 skipHistory: state.wecomKfSkipHistory,
+                deviceIdLocked: Boolean(state.wecomKfStatus?.device?.isBound),
                 onSkipHistoryChange: (next) => {
                   state.wecomKfSkipHistory = next;
                 },
-                onConfigPatch: (path, value) =>
-                  updateConfigFormValue(state as unknown as ConfigState, path, value),
+                onConfigPatch: (path, value) => patchWecomConfig(path, value),
                 onConfigSave: () => saveConfig(state as unknown as ConfigState),
                 onRefresh: () => state.handleWecomKfRefresh(),
                 onStart: (config) => state.handleWecomKfStart(config),
@@ -1041,6 +1056,8 @@ export function renderApp(state: AppViewState) {
                 filterText: state.providersFilterText,
                 selectedId: state.providersSelectedId,
                 defaultSupplierId: derivedSupplierDefaultId,
+                defaultSupplierMissing,
+                defaultSupplierNotice: state.supplierDefaultNotice,
                 dialogMode: state.supplierDialogMode,
                 dialogTargetId: state.supplierDialogTargetId,
                 draftName: state.supplierDraftName,
@@ -1122,7 +1139,7 @@ export function renderApp(state: AppViewState) {
                       ["agents", "defaults", "model", "primary"],
                       "",
                     );
-                    state.lastError = "默认供应商已删除，请重新选择默认供应商";
+                    state.supplierDefaultNotice = "已删除默认供应商，请重新设置默认供应商。";
                   }
                   const remaining = (((
                     state.configForm?.models as Record<string, unknown> | undefined
@@ -1135,7 +1152,6 @@ export function renderApp(state: AppViewState) {
                   state.providersSelectedId = nextSelected;
                   state.supplierDialogMode = "none";
                   state.supplierDialogTargetId = null;
-                  state.lastError = null;
                 },
                 onConfirmRenameSupplier: () => {
                   const supplierId = state.supplierDialogTargetId;
@@ -1227,7 +1243,22 @@ export function renderApp(state: AppViewState) {
                     `${supplierId}/${firstModelId}`,
                   );
                   state.supplierDefaultId = supplierId;
+                  state.supplierDefaultNotice = null;
                   state.lastError = null;
+                },
+                onFocusDefaultSupplier: () => {
+                  const providers = resolveProviderMap();
+                  const supplierIds = Object.keys(providers).sort((a, b) => a.localeCompare(b));
+                  if (
+                    state.providersSelectedId &&
+                    supplierIds.includes(state.providersSelectedId)
+                  ) {
+                    return;
+                  }
+                  state.providersSelectedId = supplierIds[0] ?? null;
+                },
+                onDismissDefaultSupplierNotice: () => {
+                  state.supplierDefaultNotice = null;
                 },
                 onOpenAddModelDialog: (supplierId) => {
                   state.supplierModelDialogMode = "add";

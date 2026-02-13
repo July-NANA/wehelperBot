@@ -17,6 +17,12 @@ export function resolveLocale(): string {
   if (override) {
     return override;
   }
+  if (typeof location !== "undefined") {
+    const localeFromQuery = normalizeLocale(new URLSearchParams(location.search).get("locale"));
+    if (localeFromQuery) {
+      return localeFromQuery;
+    }
+  }
   if (typeof navigator !== "undefined") {
     const nav = normalizeLocale(navigator.language);
     if (nav) {

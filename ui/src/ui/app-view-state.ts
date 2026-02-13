@@ -106,6 +106,7 @@ export type AppViewState = {
     | "ollama"
     | "custom";
   supplierDefaultId: string | null;
+  supplierDefaultNotice: string | null;
   supplierModelDialogMode: "none" | "add" | "edit" | "delete";
   supplierModelDialogSupplierId: string | null;
   supplierModelDialogTargetIndex: number | null;

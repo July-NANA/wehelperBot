@@ -29,6 +29,8 @@ export type ProvidersConfigProps = {
   filterText: string;
   selectedId: string | null;
   defaultSupplierId: string | null;
+  defaultSupplierMissing: boolean;
+  defaultSupplierNotice: string | null;
   dialogMode: SupplierDialogMode;
   dialogTargetId: string | null;
   draftName: string;
@@ -51,6 +53,8 @@ export type ProvidersConfigProps = {
   onConfirmRenameSupplier: () => void;
   onConfirmDeleteSupplier: () => void;
   onSetDefaultSupplier: (supplierId: string) => void;
+  onFocusDefaultSupplier: () => void;
+  onDismissDefaultSupplierNotice: () => void;
   onOpenAddModelDialog: (supplierId: string) => void;
   onOpenEditModelDialog: (supplierId: string, index: number) => void;
   onOpenDeleteModelDialog: (supplierId: string, index: number) => void;
@@ -257,6 +261,40 @@ export function renderProvidersConfig(props: ProvidersConfigProps) {
           ${validity}
         </span>
       </div>
+
+      ${
+        props.defaultSupplierMissing
+          ? html`
+              <div class="providers-default-callout callout warn">
+                <div>
+                  <strong>${t("Default supplier is not set.", "默认供应商未设置。")}</strong>
+                  <div class="muted">
+                    ${t(
+                      "Please select a supplier and set it as default before running agents.",
+                      "请先选择一个供应商并设为默认后再运行智能体。",
+                    )}
+                  </div>
+                </div>
+                <button class="btn btn--sm" @click=${props.onFocusDefaultSupplier}>
+                  ${t("Set default now", "去设置默认供应商")}
+                </button>
+              </div>
+            `
+          : nothing
+      }
+
+      ${
+        props.defaultSupplierNotice
+          ? html`
+              <div class="providers-default-callout callout warn">
+                <div>${props.defaultSupplierNotice}</div>
+                <button class="btn btn--sm" @click=${props.onDismissDefaultSupplierNotice}>
+                  ${t("Got it", "我知道了")}
+                </button>
+              </div>
+            `
+          : nothing
+      }
 
       <div class="providers-kpi-grid">
         <article class="providers-kpi-card">

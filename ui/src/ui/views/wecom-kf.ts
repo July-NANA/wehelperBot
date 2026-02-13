@@ -18,6 +18,7 @@ export type WecomKfProps = {
   onStart: (config: WecomKfStartConfig) => Promise<void>;
   onStop: () => Promise<void>;
   onUnbind: () => Promise<void>;
+  deviceIdLocked: boolean;
 };
 
 function getConfigSection(form: Record<string, unknown> | null): Record<string, unknown> {
@@ -70,6 +71,7 @@ export function renderWecomKf(props: WecomKfProps) {
   const callbackUrl = status?.callbackUrl ?? "";
   const missing = status?.missing ?? [];
   const device = status?.device ?? null;
+  const deviceIdLocked = props.deviceIdLocked;
 
   const startConfig: WecomKfStartConfig = {
     serverBaseUrl,
@@ -135,6 +137,7 @@ export function renderWecomKf(props: WecomKfProps) {
               class="input"
               .value=${deviceId}
               placeholder="bot-001 (optional)"
+              ?disabled=${deviceIdLocked}
               @input=${(ev: Event) =>
                 props.onConfigPatch(
                   ["plugins", "entries", "wecom-kf", "config", "deviceId"],
@@ -143,6 +146,16 @@ export function renderWecomKf(props: WecomKfProps) {
             />
           </label>
         </div>
+        ${
+          deviceIdLocked
+            ? html`<div class="callout warn" style="margin-top: 10px;">
+                ${t(
+                  "Device ID is locked while bound. Unbind first, then rename.",
+                  "设备已绑定时设备名不可修改。请先解绑，再修改设备名。",
+                )}
+              </div>`
+            : ""
+        }
         <div class="row" style="gap: 16px; flex-wrap: wrap; margin-top: 12px;">
           <label class="field" style="min-width: 260px; flex: 1;">
             <span>${t("Only Process New Messages", "只处理最新消息")}</span>

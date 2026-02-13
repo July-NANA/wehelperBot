@@ -1,0 +1,77 @@
+name: Desktop Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/desktop-build.yml"
+      - "wehelperDesktop/**"
+
+jobs:
+  build-desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: mac
+            artifact_glob: "*.dmg"
+            build_cmd: build:mac
+          - os: windows-latest
+            target: win
+            artifact_glob: "*.msi"
+            build_cmd: build:win
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: Setup pnpm
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@10.23.0 --activate
+          pnpm -v
+
+      - name: Resolve desktop workspace
+        id: desktop
+        run: |
+          set -euo pipefail
+          if [ -f "wehelperDesktop/package.json" ]; then
+            echo "dir=wehelperDesktop" >> "$GITHUB_OUTPUT"
+          elif [ -f "../wehelperDesktop/package.json" ]; then
+            echo "dir=../wehelperDesktop" >> "$GITHUB_OUTPUT"
+          else
+            echo "Cannot find wehelperDesktop/package.json"
+            exit 1
+          fi
+
+      - name: Install desktop dependencies
+        run: |
+          set -euo pipefail
+          pnpm --dir "${{ steps.desktop.outputs.dir }}" install --no-frozen-lockfile
+
+      - name: Build desktop (${{ matrix.target }})
+        run: |
+          set -euo pipefail
+          pnpm --dir "${{ steps.desktop.outputs.dir }}" "${{ matrix.build_cmd }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wehelperDesktop-${{ matrix.target }}-${{ github.run_id }}
+          path: ${{ steps.desktop.outputs.dir }}/dist/${{ matrix.artifact_glob }}
+          if-no-files-found: error
