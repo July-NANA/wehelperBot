@@ -20,6 +20,7 @@ function ensureCleanDir(dir) {
 function runPnpmDeploy() {
   const pnpmArgs = [
     "--config.inject-workspace-packages=true",
+    "--config.node-linker=hoisted",
     "--filter",
     "openclaw",
     "--prod",
