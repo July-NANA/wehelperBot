@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - feature/phase3
     paths:
       - ".github/workflows/desktop-build.yml"
       - "wehelperDesktop/**"
