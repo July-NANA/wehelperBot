@@ -60,6 +60,24 @@ jobs:
             exit 1
           fi
 
+      - name: Install wehelperBot dependencies (for bundled runtime)
+        run: |
+          set -euo pipefail
+          pnpm install --frozen-lockfile
+
+      - name: Prepare bundled Node runtime
+        run: |
+          set -euo pipefail
+          RUNTIME_DIR="${{ steps.desktop.outputs.dir }}/runtime"
+          mkdir -p "$RUNTIME_DIR"
+          NODE_BIN="$(command -v node)"
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            cp "$NODE_BIN" "$RUNTIME_DIR/node.exe"
+          else
+            cp "$NODE_BIN" "$RUNTIME_DIR/node"
+            chmod +x "$RUNTIME_DIR/node"
+          fi
+
       - name: Install desktop dependencies
         run: |
           set -euo pipefail

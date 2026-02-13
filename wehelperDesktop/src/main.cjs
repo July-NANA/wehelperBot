@@ -78,6 +78,15 @@ function resolveNvmNodeCandidates() {
 }
 
 function resolveNodeBin() {
+  const bundledNode = path.join(
+    process.resourcesPath || "",
+    "runtime",
+    process.platform === "win32" ? "node.exe" : "node",
+  );
+  if (isExecutable(bundledNode)) {
+    return bundledNode;
+  }
+
   const pathFromEnv = process.env.WEHELPER_NODE_BIN;
   if (pathFromEnv && isExecutable(pathFromEnv)) {
     return pathFromEnv;
@@ -101,10 +110,10 @@ function resolveNodeBin() {
 function resolveWehelperBotDir() {
   const envPath = process.env.WEHELPER_BOT_DIR;
   const candidates = [
+    path.join(process.resourcesPath || "", "wehelperBot"),
     envPath,
     path.join(PROJECT_ROOT, "wehelperBot"),
     path.resolve(process.cwd(), "../wehelperBot"),
-    path.join(process.resourcesPath || "", "wehelperBot"),
     path.join(os.homedir(), "Documents", "wehelper_project", "wehelperBot"),
   ];
   return firstExistingDir(candidates);
@@ -327,7 +336,7 @@ function startGateway() {
   if (!runtime) {
     dialog.showErrorBox(
       "网关启动失败",
-      "未找到 Node.js 或 wehelperBot 目录。\n请设置 WEHELPER_NODE_BIN 与 WEHELPER_BOT_DIR 后重试。",
+      "未找到内置运行时（Node / wehelperBot）。\n请重新安装桌面端，或设置 WEHELPER_NODE_BIN 与 WEHELPER_BOT_DIR 后重试。",
     );
     return false;
   }

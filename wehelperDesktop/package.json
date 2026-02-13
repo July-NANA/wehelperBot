@@ -29,6 +29,31 @@
       "src/**/*",
       "assets/**/*"
     ],
+    "extraResources": [
+      {
+        "from": "runtime",
+        "to": "runtime",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "../openclaw.mjs",
+        "to": "wehelperBot/openclaw.mjs"
+      },
+      {
+        "from": "../dist",
+        "to": "wehelperBot/dist"
+      },
+      {
+        "from": "../package.json",
+        "to": "wehelperBot/package.json"
+      },
+      {
+        "from": "../node_modules",
+        "to": "wehelperBot/node_modules"
+      }
+    ],
     "mac": {
       "target": [
         "dmg"
