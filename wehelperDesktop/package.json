@@ -1,0 +1,44 @@
+{
+  "name": "wehelper-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "wehelper Desktop tray shell",
+  "main": "src/main.cjs",
+  "scripts": {
+    "build:mac": "electron-builder --mac dmg --publish never",
+    "build:win": "electron-builder --win msi --publish never",
+    "dev": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^32.3.3",
+    "electron-builder": "^25.1.8"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron"
+    ]
+  },
+  "build": {
+    "appId": "com.wehelper.desktop",
+    "productName": "wehelperDesktop",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*"
+    ],
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "artifactName": "wehelperDesktop-${version}-mac.dmg"
+    },
+    "win": {
+      "target": [
+        "msi"
+      ],
+      "artifactName": "wehelperDesktop-${version}-win.msi"
+    }
+  }
+}
