@@ -41,10 +41,6 @@
         "msi"
       ],
       "artifactName": "wehelperDesktop-${version}-win.msi"
-    },
-    "msi": {
-      "installerIcon": "assets/icon.ico",
-      "uninstallerIcon": "assets/icon.ico"
     }
   }
 }
