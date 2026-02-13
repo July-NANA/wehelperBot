@@ -6,9 +6,10 @@
   "author": "wehelper",
   "main": "src/main.cjs",
   "scripts": {
-    "build:mac": "electron-builder --mac dmg --publish never",
-    "build:win": "electron-builder --win msi --publish never",
-    "dev": "electron ."
+    "build:mac": "pnpm run prepare:bundle && electron-builder --mac dmg --publish never",
+    "build:win": "pnpm run prepare:bundle && electron-builder --win msi --publish never",
+    "dev": "electron .",
+    "prepare:bundle": "node scripts/prepare-bundle.mjs"
   },
   "devDependencies": {
     "electron": "^32.3.3",
@@ -38,20 +39,11 @@
         ]
       },
       {
-        "from": "../openclaw.mjs",
-        "to": "wehelperBot/openclaw.mjs"
-      },
-      {
-        "from": "../dist",
-        "to": "wehelperBot/dist"
-      },
-      {
-        "from": "../package.json",
-        "to": "wehelperBot/package.json"
-      },
-      {
-        "from": "../node_modules",
-        "to": "wehelperBot/node_modules"
+        "from": ".bundle/wehelperBot",
+        "to": "wehelperBot",
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "mac": {
