@@ -18,20 +18,29 @@ function ensureCleanDir(dir) {
 }
 
 function runPnpmDeploy() {
-  execFileSync(
-    "pnpm",
-    [
-      "--dir",
-      botRoot,
-      "--config.inject-workspace-packages=true",
-      "--filter",
-      "openclaw",
-      "--prod",
-      "deploy",
-      bundleRoot,
-    ],
-    { stdio: "inherit" },
-  );
+  const pnpmArgs = [
+    "--config.inject-workspace-packages=true",
+    "--filter",
+    "openclaw",
+    "--prod",
+    "deploy",
+    bundleRoot,
+  ];
+
+  const npmExecPath = process.env.npm_execpath;
+  if (npmExecPath && existsSync(npmExecPath)) {
+    execFileSync(process.execPath, [npmExecPath, ...pnpmArgs], {
+      cwd: botRoot,
+      stdio: "inherit",
+    });
+    return;
+  }
+
+  const pnpmBin = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+  execFileSync(pnpmBin, pnpmArgs, {
+    cwd: botRoot,
+    stdio: "inherit",
+  });
 }
 
 function resolveNodeExecutable() {
