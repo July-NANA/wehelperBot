@@ -15,23 +15,14 @@ const requiredBundlePaths = [
   { src: resolve(botRoot, "openclaw.mjs"), dst: resolve(bundleRoot, "openclaw.mjs") },
   { src: resolve(botRoot, "dist"), dst: resolve(bundleRoot, "dist") },
 ];
+const requiredDistEntry = resolve(botRoot, "dist", "entry.js");
 
 function ensureCleanDir(dir) {
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
 }
 
-function runPnpmDeploy() {
-  const pnpmArgs = [
-    "--config.inject-workspace-packages=true",
-    "--config.node-linker=hoisted",
-    "--filter",
-    "openclaw",
-    "--prod",
-    "deploy",
-    bundleRoot,
-  ];
-
+function runPnpm(pnpmArgs) {
   const npmExecPath = process.env.npm_execpath;
   if (npmExecPath && existsSync(npmExecPath)) {
     execFileSync(process.execPath, [npmExecPath, ...pnpmArgs], {
@@ -46,6 +37,26 @@ function runPnpmDeploy() {
     cwd: botRoot,
     stdio: "inherit",
   });
+}
+
+function ensureRuntimeArtifacts() {
+  if (existsSync(requiredDistEntry)) {
+    return;
+  }
+  console.log("dist/entry.js missing, building openclaw runtime artifacts...");
+  runPnpm(["run", "build"]);
+}
+
+function runPnpmDeploy() {
+  runPnpm([
+    "--config.inject-workspace-packages=true",
+    "--config.node-linker=hoisted",
+    "--filter",
+    "openclaw",
+    "--prod",
+    "deploy",
+    bundleRoot,
+  ]);
 }
 
 function resolveNodeExecutable() {
@@ -94,6 +105,7 @@ function copyRequiredRuntimeFiles() {
 }
 
 function main() {
+  ensureRuntimeArtifacts();
   ensureCleanDir(bundleRoot);
   runPnpmDeploy();
   copyRequiredRuntimeFiles();
