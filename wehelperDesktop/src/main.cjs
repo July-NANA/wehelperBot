@@ -19,6 +19,7 @@ let healthTimer = null;
 let gatewayHealthy = false;
 let quitting = false;
 let shutdownPromise = null;
+let gatewayStartedAtMs = 0;
 
 function gatewayBaseUrl() {
   if (!gatewayPort) {
@@ -260,6 +261,19 @@ function runtimeFilePath() {
   return path.join(app.getPath("userData"), "runtime.json");
 }
 
+function gatewayLogFilePath() {
+  return path.join(app.getPath("userData"), "gateway.log");
+}
+
+function appendGatewayLog(line) {
+  try {
+    fs.mkdirSync(app.getPath("userData"), { recursive: true });
+    fs.appendFileSync(gatewayLogFilePath(), `${new Date().toISOString()} ${line}\n`, "utf-8");
+  } catch {
+    // ignore
+  }
+}
+
 function writeRuntimeState() {
   try {
     const runtime = {
@@ -345,15 +359,35 @@ function startGateway() {
     cwd: runtime.botDir,
     env: { ...process.env },
     detached: false,
-    stdio: process.platform === "win32" ? "ignore" : "inherit",
+    stdio: process.platform === "win32" ? ["ignore", "pipe", "pipe"] : "inherit",
     windowsHide: process.platform === "win32",
   });
+  gatewayStartedAtMs = Date.now();
+  appendGatewayLog(
+    `[spawn] node=${runtime.nodeBin} cwd=${runtime.botDir} args=${gatewayArgs().join(" ")}`,
+  );
 
-  gatewayProcess.on("exit", () => {
+  if (process.platform === "win32" && gatewayProcess.stdout && gatewayProcess.stderr) {
+    gatewayProcess.stdout.on("data", (chunk) => {
+      appendGatewayLog(`[stdout] ${String(chunk).trimEnd()}`);
+    });
+    gatewayProcess.stderr.on("data", (chunk) => {
+      appendGatewayLog(`[stderr] ${String(chunk).trimEnd()}`);
+    });
+  }
+
+  gatewayProcess.on("exit", (code, signal) => {
+    appendGatewayLog(`[exit] code=${code ?? "?"} signal=${signal ?? "?"}`);
     gatewayProcess = null;
     gatewayHealthy = false;
     clearRuntimeState();
     updateTrayMenu();
+    if (!quitting && Date.now() - gatewayStartedAtMs < 30_000) {
+      dialog.showErrorBox(
+        "网关启动失败",
+        `网关进程异常退出 (code=${code ?? "?"}, signal=${signal ?? "?"})。\n日志：${gatewayLogFilePath()}`,
+      );
+    }
   });
   gatewayProcess.on("error", (error) => {
     gatewayProcess = null;
