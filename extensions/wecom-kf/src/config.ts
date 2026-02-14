@@ -51,7 +51,7 @@ const DEFAULT_TUNNEL: WecomKfTunnelConfig = {
 
 const DEFAULTS: WecomKfConfig = {
   enabled: true,
-  serverBaseUrl: "",
+  serverBaseUrl: "http://8.148.182.238:8080",
   deviceId: "",
   localAgentId: "main",
   localAgentTimeoutSeconds: 180,
@@ -105,7 +105,7 @@ export function resolveWecomKfConfig(value: unknown): WecomKfConfig {
 
   return {
     enabled: toBoolean(raw.enabled, DEFAULTS.enabled),
-    serverBaseUrl: toString(raw.serverBaseUrl),
+    serverBaseUrl: toString(raw.serverBaseUrl) || DEFAULTS.serverBaseUrl,
     deviceId: toString(raw.deviceId),
     localAgentId: toString(raw.localAgentId) || DEFAULTS.localAgentId,
     localAgentTimeoutSeconds: toNumber(

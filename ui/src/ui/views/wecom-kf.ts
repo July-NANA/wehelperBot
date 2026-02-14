@@ -2,6 +2,8 @@ import { html } from "lit";
 import type { WecomKfStatus, WecomKfStartConfig } from "../controllers/wecom-kf.ts";
 import { t } from "../i18n.ts";
 
+const DEFAULT_SERVER_BASE_URL = "http://8.148.182.238:8080";
+
 export type WecomKfProps = {
   connected: boolean;
   loading: boolean;
@@ -60,7 +62,7 @@ function formatTs(msOrSec: number | null | undefined): string {
 
 export function renderWecomKf(props: WecomKfProps) {
   const cfg = getConfigSection(props.configForm);
-  const serverBaseUrl = getString(cfg, "serverBaseUrl");
+  const serverBaseUrl = getString(cfg, "serverBaseUrl") || DEFAULT_SERVER_BASE_URL;
   const deviceId = getString(cfg, "deviceId");
   const skipHistory = props.skipHistory;
   const listenHost = getString(cfg, "listenHost") || "127.0.0.1";

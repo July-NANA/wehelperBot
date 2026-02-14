@@ -345,7 +345,8 @@ function startGateway() {
     cwd: runtime.botDir,
     env: { ...process.env },
     detached: false,
-    stdio: "inherit",
+    stdio: process.platform === "win32" ? "ignore" : "inherit",
+    windowsHide: process.platform === "win32",
   });
 
   gatewayProcess.on("exit", () => {
