@@ -11,6 +11,10 @@ const botRoot = resolve(desktopRoot, "..");
 const bundleRoot = resolve(desktopRoot, ".bundle", "wehelperBot");
 const runtimeRoot = resolve(desktopRoot, "runtime");
 const bundledNode = resolve(runtimeRoot, process.platform === "win32" ? "node.exe" : "node");
+const requiredBundlePaths = [
+  { src: resolve(botRoot, "openclaw.mjs"), dst: resolve(bundleRoot, "openclaw.mjs") },
+  { src: resolve(botRoot, "dist"), dst: resolve(bundleRoot, "dist") },
+];
 
 function ensureCleanDir(dir) {
   rmSync(dir, { recursive: true, force: true });
@@ -80,9 +84,19 @@ function writeBundleMeta() {
   );
 }
 
+function copyRequiredRuntimeFiles() {
+  for (const { src, dst } of requiredBundlePaths) {
+    if (!existsSync(src)) {
+      throw new Error(`required_runtime_path_missing: ${src}`);
+    }
+    cpSync(src, dst, { recursive: true, force: true });
+  }
+}
+
 function main() {
   ensureCleanDir(bundleRoot);
   runPnpmDeploy();
+  copyRequiredRuntimeFiles();
   copyNodeRuntime();
   writeBundleMeta();
   console.log(`Bundled runtime ready at ${bundleRoot}`);
