@@ -16,6 +16,7 @@ const requiredBundlePaths = [
   { src: resolve(botRoot, "dist"), dst: resolve(bundleRoot, "dist") },
 ];
 const requiredDistEntry = resolve(botRoot, "dist", "entry.js");
+const requiredControlUiIndex = resolve(botRoot, "dist", "control-ui", "index.html");
 
 function ensureCleanDir(dir) {
   rmSync(dir, { recursive: true, force: true });
@@ -40,11 +41,25 @@ function runPnpm(pnpmArgs) {
 }
 
 function ensureRuntimeArtifacts() {
-  if (existsSync(requiredDistEntry)) {
-    return;
+  if (!existsSync(requiredDistEntry)) {
+    console.log("dist/entry.js missing, building openclaw runtime artifacts...");
+    runPnpm(["run", "build"]);
   }
-  console.log("dist/entry.js missing, building openclaw runtime artifacts...");
-  runPnpm(["run", "build"]);
+
+  if (!existsSync(requiredDistEntry)) {
+    throw new Error(`runtime_build_missing_entry: ${requiredDistEntry}`);
+  }
+}
+
+function ensureControlUiArtifacts() {
+  if (!existsSync(requiredControlUiIndex)) {
+    console.log("dist/control-ui/index.html missing, building control UI assets...");
+    runPnpm(["run", "ui:build"]);
+  }
+
+  if (!existsSync(requiredControlUiIndex)) {
+    throw new Error(`control_ui_build_missing_index: ${requiredControlUiIndex}`);
+  }
 }
 
 function runPnpmDeploy() {
@@ -106,6 +121,7 @@ function copyRequiredRuntimeFiles() {
 
 function main() {
   ensureRuntimeArtifacts();
+  ensureControlUiArtifacts();
   ensureCleanDir(bundleRoot);
   runPnpmDeploy();
   copyRequiredRuntimeFiles();
