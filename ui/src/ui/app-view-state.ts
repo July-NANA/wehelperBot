@@ -76,6 +76,8 @@ export type AppViewState = {
   execApprovalBusy: boolean;
   execApprovalError: string | null;
   pendingGatewayUrl: string | null;
+  desktopStartupLockEnabled: boolean;
+  desktopStartupUnlockedOnce: boolean;
   configLoading: boolean;
   configRaw: string;
   configRawOriginal: string;

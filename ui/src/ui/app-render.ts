@@ -97,12 +97,19 @@ export function renderApp(state: AppViewState) {
   const cronNext = state.cronStatus?.nextWakeAtMs ?? null;
   const chatDisabledReason = state.connected ? null : "Disconnected from gateway.";
   const isChat = state.tab === "chat";
+  const startupLockActive =
+    state.desktopStartupLockEnabled && !state.desktopStartupUnlockedOnce && isChat;
   const chatFocus = isChat && (state.settings.chatFocusMode || state.onboarding);
   const showThinking = state.onboarding ? false : state.settings.chatShowThinking;
   const assistantAvatarUrl = resolveAssistantAvatarUrl(state);
   const chatAvatarUrl = state.chatAvatarUrl ?? assistantAvatarUrl ?? null;
   const logoBase = normalizeBasePath(state.basePath);
-  const logoHref = logoBase ? `${logoBase}/favicon.svg` : "/favicon.svg";
+  const logoHref =
+    typeof window !== "undefined" && window.location.protocol === "file:"
+      ? "./favicon.svg"
+      : logoBase
+        ? `${logoBase}/favicon.svg`
+        : "/favicon.svg";
   const configValue =
     state.configForm ?? (state.configSnapshot?.config as Record<string, unknown> | null);
   const resolvedAgentId =
@@ -947,6 +954,7 @@ export function renderApp(state: AppViewState) {
                 draft: state.chatMessage,
                 queue: state.chatQueue,
                 connected: state.connected,
+                startupLockActive,
                 canSend: state.connected,
                 disabledReason: chatDisabledReason,
                 error: state.lastError,

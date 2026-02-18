@@ -73,6 +73,10 @@ function resolveHostName(hostHeader?: string): string {
   return name ?? "";
 }
 
+function normalizeOriginForDesktopBypass(originRaw?: string): string {
+  return (originRaw ?? "").trim().toLowerCase();
+}
+
 type AuthProvidedKind = "token" | "password" | "none";
 
 function formatGatewayAuthFailureMessage(params: {
@@ -369,12 +373,23 @@ export function attachGatewayWsMessageHandler(params: {
         const isControlUi = connectParams.client.id === GATEWAY_CLIENT_IDS.CONTROL_UI;
         const isWebchat = isWebchatConnect(connectParams);
         if (isControlUi || isWebchat) {
+          const originNormalized = normalizeOriginForDesktopBypass(requestOrigin);
+          const providedToken = connectParams.auth?.token?.trim() ?? "";
+          const expectedToken = resolvedAuth.token?.trim() ?? "";
+          const hasMatchingToken =
+            resolvedAuth.mode === "token" &&
+            expectedToken.length > 0 &&
+            providedToken.length > 0 &&
+            providedToken === expectedToken;
+          const isDesktopFileOrigin = originNormalized === "file://" || originNormalized === "null";
+          const allowDesktopEmbeddedFileOrigin =
+            isDesktopFileOrigin && hostIsLocal && isLoopbackAddress(remoteAddr) && hasMatchingToken;
           const originCheck = checkBrowserOrigin({
             requestHost,
             origin: requestOrigin,
             allowedOrigins: configSnapshot.gateway?.controlUi?.allowedOrigins,
           });
-          if (!originCheck.ok) {
+          if (!originCheck.ok && !allowDesktopEmbeddedFileOrigin) {
             const errorMessage =
               "origin not allowed (open the Control UI from the gateway host or allow it in gateway.controlUi.allowedOrigins)";
             setHandshakeState("failed");

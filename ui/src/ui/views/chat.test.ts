@@ -92,4 +92,20 @@ describe("chat view", () => {
     expect(onNewSession).toHaveBeenCalledTimes(1);
     expect(container.textContent).not.toContain("Stop");
   });
+
+  it("shows startup overlay and disables compose while startup lock is active", () => {
+    const container = document.createElement("div");
+    render(
+      renderChat(
+        createProps({
+          startupLockActive: true,
+        }),
+      ),
+      container,
+    );
+
+    expect(container.textContent).toContain("网关启动中，请稍候");
+    const textarea = container.querySelector("textarea");
+    expect(textarea?.hasAttribute("disabled")).toBe(true);
+  });
 });

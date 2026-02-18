@@ -52,6 +52,32 @@ type SettingsHost = {
   pendingGatewayUrl?: string | null;
 };
 
+function readDesktopBootstrap(): {
+  gatewayUrl: string;
+  token?: string;
+  startupLock: boolean;
+  basePath?: string;
+} | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  const fromGlobal = window.__OPENCLAW_DESKTOP_BOOTSTRAP__;
+  const fromBridge = window.wehelperDesktop?.desktopBootstrap;
+  const candidate = fromGlobal ?? fromBridge;
+  if (!candidate) {
+    return null;
+  }
+  if (typeof candidate.gatewayUrl !== "string" || !candidate.gatewayUrl.trim()) {
+    return null;
+  }
+  return {
+    gatewayUrl: candidate.gatewayUrl.trim(),
+    token: typeof candidate.token === "string" ? candidate.token : "",
+    startupLock: candidate.startupLock === true,
+    basePath: typeof candidate.basePath === "string" ? candidate.basePath : undefined,
+  };
+}
+
 function isTopLevelWindow(): boolean {
   try {
     return window.top === window.self;
@@ -102,6 +128,29 @@ export function setLastActiveSessionKey(host: SettingsHost, next: string) {
 }
 
 export function applySettingsFromUrl(host: SettingsHost) {
+  const desktopBootstrap = readDesktopBootstrap();
+  if (desktopBootstrap) {
+    const nextGatewayUrl = desktopBootstrap.gatewayUrl.trim();
+    const nextToken =
+      typeof desktopBootstrap.token === "string" ? desktopBootstrap.token : host.settings.token;
+    const shouldApplyBootstrap =
+      nextGatewayUrl !== host.settings.gatewayUrl || nextToken !== host.settings.token;
+    if (shouldApplyBootstrap) {
+      applySettings(host, {
+        ...host.settings,
+        gatewayUrl: nextGatewayUrl,
+        token: nextToken,
+      });
+    }
+    if (
+      typeof desktopBootstrap.basePath === "string" &&
+      desktopBootstrap.basePath.trim() &&
+      !window.__OPENCLAW_CONTROL_UI_BASE_PATH__
+    ) {
+      window.__OPENCLAW_CONTROL_UI_BASE_PATH__ = desktopBootstrap.basePath;
+    }
+  }
+
   if (!window.location.search) {
     return;
   }
@@ -396,6 +445,9 @@ export function syncUrlWithTab(host: SettingsHost, tab: Tab, replace: boolean) {
   if (typeof window === "undefined") {
     return;
   }
+  if (window.location.protocol === "file:") {
+    return;
+  }
   const targetPath = normalizePath(pathForTab(tab, host.basePath));
   const currentPath = normalizePath(window.location.pathname);
   const url = new URL(window.location.href);
@@ -419,6 +471,9 @@ export function syncUrlWithTab(host: SettingsHost, tab: Tab, replace: boolean) {
 
 export function syncUrlWithSessionKey(sessionKey: string, replace: boolean) {
   if (typeof window === "undefined") {
+    return;
+  }
+  if (window.location.protocol === "file:") {
     return;
   }
   const url = new URL(window.location.href);

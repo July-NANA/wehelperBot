@@ -40,6 +40,7 @@ export function renderTab(state: AppViewState, tab: Tab) {
 }
 
 export function renderChatControls(state: AppViewState) {
+  const startupLocked = state.desktopStartupLockEnabled && !state.desktopStartupUnlockedOnce;
   const mainSessionKey = resolveMainSessionKey(state.hello, state.sessionsResult);
   const sessionOptions = resolveSessionOptions(
     state.sessionKey,
@@ -89,7 +90,7 @@ export function renderChatControls(state: AppViewState) {
       <label class="field chat-controls__session">
         <select
           .value=${state.sessionKey}
-          ?disabled=${!state.connected}
+          ?disabled=${startupLocked || !state.connected}
           @change=${(e: Event) => {
             const next = (e.target as HTMLSelectElement).value;
             state.sessionKey = next;
@@ -121,7 +122,7 @@ export function renderChatControls(state: AppViewState) {
       </label>
       <button
         class="btn btn--sm btn--icon"
-        ?disabled=${state.chatLoading || !state.connected}
+        ?disabled=${startupLocked || state.chatLoading || !state.connected}
         @click=${() => {
           (state as unknown as wehelperApp).resetToolStream();
           void refreshChat(state as unknown as Parameters<typeof refreshChat>[0]);
@@ -133,7 +134,7 @@ export function renderChatControls(state: AppViewState) {
       <span class="chat-controls__separator">|</span>
       <button
         class="btn btn--sm btn--icon ${showThinking ? "active" : ""}"
-        ?disabled=${disableThinkingToggle}
+        ?disabled=${startupLocked || disableThinkingToggle}
         @click=${() => {
           if (disableThinkingToggle) {
             return;
@@ -154,7 +155,7 @@ export function renderChatControls(state: AppViewState) {
       </button>
       <button
         class="btn btn--sm btn--icon ${focusActive ? "active" : ""}"
-        ?disabled=${disableFocusToggle}
+        ?disabled=${startupLocked || disableFocusToggle}
         @click=${() => {
           if (disableFocusToggle) {
             return;

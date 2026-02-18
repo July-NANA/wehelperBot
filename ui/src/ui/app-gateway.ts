@@ -54,6 +54,8 @@ type GatewayHost = {
   refreshSessionsAfterChat: Set<string>;
   execApprovalQueue: ExecApprovalRequest[];
   execApprovalError: string | null;
+  desktopStartupLockEnabled?: boolean;
+  desktopStartupUnlockedOnce?: boolean;
 };
 
 type SessionDefaultsSnapshot = {
@@ -133,6 +135,9 @@ export function connectGateway(host: GatewayHost) {
       host.connected = true;
       host.lastError = null;
       host.hello = hello;
+      if (host.desktopStartupLockEnabled && !host.desktopStartupUnlockedOnce) {
+        host.desktopStartupUnlockedOnce = true;
+      }
       applySnapshot(host, hello);
       // Reset orphaned chat run state from before disconnect.
       // Any in-flight run's final event was lost during the disconnect window.

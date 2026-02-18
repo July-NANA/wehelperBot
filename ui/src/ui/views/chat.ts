@@ -38,6 +38,7 @@ export type ChatProps = {
   draft: string;
   queue: ChatQueueItem[];
   connected: boolean;
+  startupLockActive?: boolean;
   canSend: boolean;
   disabledReason: string | null;
   error: string | null;
@@ -187,7 +188,8 @@ function renderAttachmentPreview(props: ChatProps) {
 }
 
 export function renderChat(props: ChatProps) {
-  const canCompose = props.connected;
+  const startupLocked = Boolean(props.startupLockActive);
+  const canCompose = props.connected && !startupLocked;
   const isBusy = props.sending || props.stream !== null;
   const canAbort = Boolean(props.canAbort && props.onAbort);
   const activeSession = props.sessions?.sessions?.find((row) => row.key === props.sessionKey);
@@ -258,6 +260,26 @@ export function renderChat(props: ChatProps) {
 
   return html`
     <section class="card chat">
+      ${
+        startupLocked
+          ? html`
+              <div
+                class="chat-startup-overlay"
+                role="status"
+                aria-live="polite"
+                aria-label=${t("Gateway is starting, please wait", "网关启动中，请稍候")}
+              >
+                <div class="chat-startup-overlay__panel">
+                  <span class="chat-startup-overlay__spinner" aria-hidden="true">${icons.loader}</span>
+                  <div class="chat-startup-overlay__text">
+                    ${t("Gateway is starting, please wait", "网关启动中，请稍候")}
+                  </div>
+                </div>
+              </div>
+            `
+          : nothing
+      }
+
       ${props.disabledReason ? html`<div class="callout">${props.disabledReason}</div>` : nothing}
 
       ${props.error ? html`<div class="callout danger">${props.error}</div>` : nothing}
@@ -374,7 +396,7 @@ export function renderChat(props: ChatProps) {
             <textarea
               ${ref((el) => el && adjustTextareaHeight(el as HTMLTextAreaElement))}
               .value=${props.draft}
-              ?disabled=${!props.connected}
+              ?disabled=${startupLocked || !props.connected}
               @keydown=${(e: KeyboardEvent) => {
                 if (e.key !== "Enter") {
                   return;
@@ -405,14 +427,14 @@ export function renderChat(props: ChatProps) {
           <div class="chat-compose__actions">
             <button
               class="btn"
-              ?disabled=${!props.connected || (!canAbort && props.sending)}
+              ?disabled=${startupLocked || !props.connected || (!canAbort && props.sending)}
               @click=${canAbort ? props.onAbort : props.onNewSession}
             >
               ${canAbort ? t("Stop", "停止") : t("New session", "新会话")}
             </button>
             <button
               class="btn primary"
-              ?disabled=${!props.connected}
+              ?disabled=${startupLocked || !props.connected}
               @click=${props.onSend}
             >
               ${isBusy ? t("Queue", "加入队列") : t("Send", "发送")}<kbd class="btn-kbd">↵</kbd>

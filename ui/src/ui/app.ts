@@ -87,12 +87,28 @@ import { loadSettings, type UiSettings } from "./storage.ts";
 import { type ChatAttachment, type ChatQueueItem, type CronFormState } from "./ui-types.ts";
 
 declare global {
+  interface OpenclawDesktopBootstrap {
+    gatewayUrl: string;
+    token?: string;
+    startupLock: boolean;
+    basePath?: string;
+  }
+
+  interface WehelperDesktopBridge {
+    version: string;
+    desktopBootstrap?: OpenclawDesktopBootstrap;
+  }
+
   interface Window {
     __OPENCLAW_CONTROL_UI_BASE_PATH__?: string;
+    __OPENCLAW_DESKTOP_BOOTSTRAP__?: OpenclawDesktopBootstrap;
+    wehelperDesktop?: WehelperDesktopBridge;
   }
 }
 
 const injectedAssistantIdentity = resolveInjectedAssistantIdentity();
+const desktopBootstrap =
+  window.__OPENCLAW_DESKTOP_BOOTSTRAP__ ?? window.wehelperDesktop?.desktopBootstrap ?? null;
 
 function resolveOnboardingMode(): boolean {
   if (!window.location.search) {
@@ -164,6 +180,8 @@ export class wehelperApp extends LitElement {
   @state() execApprovalBusy = false;
   @state() execApprovalError: string | null = null;
   @state() pendingGatewayUrl: string | null = null;
+  @state() desktopStartupLockEnabled = Boolean(desktopBootstrap?.startupLock);
+  @state() desktopStartupUnlockedOnce = !desktopBootstrap?.startupLock;
 
   @state() configLoading = false;
   @state() configRaw = "{\n}\n";

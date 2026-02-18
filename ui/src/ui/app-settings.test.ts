@@ -1,6 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Tab } from "./navigation.ts";
-import { setTabFromRoute } from "./app-settings.ts";
+import { applySettingsFromUrl, setTabFromRoute } from "./app-settings.ts";
+
+declare global {
+  interface Window {
+    __OPENCLAW_DESKTOP_BOOTSTRAP__?: {
+      gatewayUrl: string;
+      token?: string;
+      startupLock: boolean;
+      basePath?: string;
+    };
+  }
+}
 
 type SettingsHost = Parameters<typeof setTabFromRoute>[0] & {
   logsPollInterval: number | null;
@@ -43,6 +54,7 @@ describe("setTabFromRoute", () => {
   });
 
   afterEach(() => {
+    window.__OPENCLAW_DESKTOP_BOOTSTRAP__ = undefined;
     vi.useRealTimers();
   });
 
@@ -66,5 +78,22 @@ describe("setTabFromRoute", () => {
 
     setTabFromRoute(host, "chat");
     expect(host.debugPollInterval).toBeNull();
+  });
+
+  it("applies desktop bootstrap gateway settings without pending confirmation", () => {
+    const host = createHost("chat");
+    const bootstrap = {
+      gatewayUrl: "ws://127.0.0.1:19090",
+      token: "desktop-token",
+      startupLock: true,
+      basePath: "/",
+    };
+
+    window.__OPENCLAW_DESKTOP_BOOTSTRAP__ = bootstrap;
+    applySettingsFromUrl(host);
+
+    expect(host.settings.gatewayUrl).toBe("ws://127.0.0.1:19090");
+    expect(host.settings.token).toBe("desktop-token");
+    expect(host.pendingGatewayUrl ?? null).toBeNull();
   });
 });
