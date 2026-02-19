@@ -6,6 +6,7 @@
 
 import { html, nothing, type TemplateResult } from "lit";
 import type { NostrProfile as NostrProfileType } from "../types.ts";
+import { t } from "../i18n.ts";
 
 // ============================================================================
 // Types
@@ -166,8 +167,8 @@ export function renderNostrProfileForm(params: {
   return html`
     <div class="nostr-profile-form" style="padding: 16px; background: var(--bg-secondary); border-radius: 8px; margin-top: 12px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <div style="font-weight: 600; font-size: 16px;">Edit Profile</div>
-        <div style="font-size: 12px; color: var(--text-muted);">Account: ${accountId}</div>
+        <div style="font-weight: 600; font-size: 16px;">${t("Edit Profile", "编辑资料")}</div>
+        <div style="font-size: 12px; color: var(--text-muted);">${t("Account", "账号")}: ${accountId}</div>
       </div>
 
       ${
@@ -213,7 +214,7 @@ export function renderNostrProfileForm(params: {
         state.showAdvanced
           ? html`
             <div style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 12px;">
-              <div style="font-weight: 500; margin-bottom: 12px; color: var(--text-muted);">Advanced</div>
+              <div style="font-weight: 500; margin-bottom: 12px; color: var(--text-muted);">${t("Advanced", "高级")}</div>
 
               ${renderField("banner", "Banner URL", {
                 type: "url",

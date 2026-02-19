@@ -2,12 +2,37 @@ const { app, BrowserWindow, Menu, Tray, nativeImage, dialog } = require("electro
 const path = require("path");
 const fs = require("fs");
 const os = require("os");
+const { pathToFileURL } = require("url");
 const { spawn, execSync } = require("child_process");
 const net = require("net");
 
-const requestedGatewayPort = Number.parseInt(process.env.WEHELPER_GATEWAY_PORT || "", 10);
-const GATEWAY_TOKEN = process.env.WEHELPER_DESKTOP_TOKEN || "desktop-token";
-const UI_LOCALE = process.env.WEHELPER_UI_LOCALE || "zh-CN";
+const warnedLegacyEnv = new Set();
+function readCompatEnv(primary, legacy, fallback = "") {
+  const primaryValue = process.env[primary];
+  if (primaryValue != null && String(primaryValue).length > 0) {
+    return primaryValue;
+  }
+  const legacyValue = process.env[legacy];
+  if (legacyValue != null && String(legacyValue).length > 0) {
+    if (!warnedLegacyEnv.has(legacy)) {
+      warnedLegacyEnv.add(legacy);
+      console.warn(`[deprecation] ${legacy} is deprecated, please use ${primary}.`);
+    }
+    return legacyValue;
+  }
+  return fallback;
+}
+
+const requestedGatewayPort = Number.parseInt(
+  readCompatEnv("LINGSHI_GATEWAY_PORT", "WEHELPER_GATEWAY_PORT", ""),
+  10,
+);
+const GATEWAY_TOKEN = readCompatEnv(
+  "LINGSHI_DESKTOP_TOKEN",
+  "WEHELPER_DESKTOP_TOKEN",
+  "desktop-token",
+);
+const UI_LOCALE = readCompatEnv("LINGSHI_UI_LOCALE", "WEHELPER_UI_LOCALE", "zh-CN");
 const PROJECT_ROOT = path.resolve(__dirname, "../..");
 let resolvedGateway = null;
 let gatewayPort = null;
@@ -20,12 +45,20 @@ let gatewayHealthy = false;
 let quitting = false;
 let shutdownPromise = null;
 let gatewayStartedAtMs = 0;
+let pendingUiOpenTimer = null;
 
 function gatewayBaseUrl() {
   if (!gatewayPort) {
     return null;
   }
   return `http://127.0.0.1:${gatewayPort}`;
+}
+
+function gatewayWsUrl() {
+  if (!gatewayPort) {
+    return null;
+  }
+  return `ws://127.0.0.1:${gatewayPort}`;
 }
 
 function dashboardUrl(targetPath) {
@@ -41,6 +74,20 @@ function dashboardUrl(targetPath) {
     url.searchParams.set("locale", UI_LOCALE);
   }
   return url.toString();
+}
+
+function buildDesktopBootstrap() {
+  const wsUrl = gatewayWsUrl();
+  if (!wsUrl) {
+    return null;
+  }
+  return {
+    gatewayUrl: wsUrl,
+    token: GATEWAY_TOKEN || "",
+    startupLock: true,
+    basePath: "/",
+    locale: UI_LOCALE || "zh-CN",
+  };
 }
 
 function isExecutable(filePath) {
@@ -88,7 +135,7 @@ function resolveNodeBin() {
     return bundledNode;
   }
 
-  const pathFromEnv = process.env.WEHELPER_NODE_BIN;
+  const pathFromEnv = readCompatEnv("LINGSHI_NODE_BIN", "WEHELPER_NODE_BIN", "");
   if (pathFromEnv && isExecutable(pathFromEnv)) {
     return pathFromEnv;
   }
@@ -108,13 +155,17 @@ function resolveNodeBin() {
   return null;
 }
 
-function resolveWehelperBotDir() {
-  const envPath = process.env.WEHELPER_BOT_DIR;
+function resolveLingshiBotDir() {
+  const envPath = readCompatEnv("LINGSHI_BOT_DIR", "WEHELPER_BOT_DIR", "");
   const candidates = [
+    path.join(process.resourcesPath || "", "lingshi_bot"),
     path.join(process.resourcesPath || "", "wehelperBot"),
     envPath,
+    path.join(PROJECT_ROOT, "lingshi_bot"),
     path.join(PROJECT_ROOT, "wehelperBot"),
+    path.resolve(process.cwd(), "../lingshi_bot"),
     path.resolve(process.cwd(), "../wehelperBot"),
+    path.join(os.homedir(), "Documents", "lingshi_project", "lingshi_bot"),
     path.join(os.homedir(), "Documents", "wehelper_project", "wehelperBot"),
   ];
   return firstExistingDir(candidates);
@@ -122,11 +173,88 @@ function resolveWehelperBotDir() {
 
 function resolveGatewayRuntime() {
   const nodeBin = resolveNodeBin();
-  const botDir = resolveWehelperBotDir();
+  const botDir = resolveLingshiBotDir();
   if (!nodeBin || !botDir) {
     return null;
   }
   return { nodeBin, botDir };
+}
+
+function resolveLocalControlUiIndex() {
+  const botDir = resolveLingshiBotDir();
+  const envPath = readCompatEnv("LINGSHI_CONTROL_UI_INDEX", "WEHELPER_CONTROL_UI_INDEX", "");
+  const candidates = [
+    envPath,
+    botDir ? path.join(botDir, "dist", "control-ui", "index.html") : null,
+    path.join(PROJECT_ROOT, "lingshi_bot", "dist", "control-ui", "index.html"),
+    path.join(PROJECT_ROOT, "wehelperBot", "dist", "control-ui", "index.html"),
+    path.resolve(process.cwd(), "../lingshi_bot/dist/control-ui/index.html"),
+    path.resolve(process.cwd(), "../wehelperBot/dist/control-ui/index.html"),
+    path.join(process.resourcesPath || "", "lingshi_bot", "dist", "control-ui", "index.html"),
+    path.join(process.resourcesPath || "", "wehelperBot", "dist", "control-ui", "index.html"),
+    path.join(
+      os.homedir(),
+      "Documents",
+      "lingshi_project",
+      "lingshi_bot",
+      "dist",
+      "control-ui",
+      "index.html",
+    ),
+    path.join(
+      os.homedir(),
+      "Documents",
+      "wehelper_project",
+      "wehelperBot",
+      "dist",
+      "control-ui",
+      "index.html",
+    ),
+  ];
+  for (const candidate of candidates) {
+    if (!candidate) {
+      continue;
+    }
+    try {
+      if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+        return candidate;
+      }
+    } catch {
+      // ignore
+    }
+  }
+  return null;
+}
+
+function tabFromTargetPath(targetPath) {
+  switch (targetPath) {
+    case "/wecom":
+      return "wecom";
+    case "/providers":
+      return "providers";
+    case "/chat":
+    default:
+      return "chat";
+  }
+}
+
+function applyWindowTab(tab) {
+  if (!statusWindow || statusWindow.isDestroyed()) {
+    return;
+  }
+  const allowed = new Set(["chat", "wecom", "providers"]);
+  const nextTab = allowed.has(tab) ? tab : "chat";
+  statusWindow.webContents
+    .executeJavaScript(
+      `(() => {
+        const app = document.querySelector("openclaw-app");
+        if (!app || typeof app.setTab !== "function") return false;
+        app.setTab(${JSON.stringify(nextTab)});
+        return true;
+      })();`,
+      true,
+    )
+    .catch(() => {});
 }
 
 function gatewayArgs() {
@@ -144,14 +272,32 @@ function gatewayArgs() {
   ];
 }
 
-function createStatusWindow(targetPath) {
-  const url = dashboardUrl(targetPath);
-  if (!url) {
-    dialog.showErrorBox("网关未启动", "网关端口尚未分配，请先启动网关。");
+function createStatusWindow(targetPath, resolvedIndexPath) {
+  const tab = tabFromTargetPath(targetPath);
+  const controlUiIndex = resolvedIndexPath || resolveLocalControlUiIndex();
+  if (!controlUiIndex) {
+    dialog.showErrorBox(
+      "控制台资源缺失",
+      "未找到本地 Control UI 资源（dist/control-ui/index.html）。\n请先在 lingshi_bot 目录执行：pnpm ui:build",
+    );
     return;
   }
+
+  const bootstrap = buildDesktopBootstrap();
+  const bootstrapArg = bootstrap
+    ? `--lingshi-desktop-bootstrap=${encodeURIComponent(JSON.stringify(bootstrap))}`
+    : null;
+  const webPrefs = {
+    preload: path.join(__dirname, "preload.cjs"),
+    contextIsolation: true,
+    sandbox: true,
+  };
+  if (bootstrapArg) {
+    webPrefs.additionalArguments = [bootstrapArg];
+  }
+
   if (statusWindow && !statusWindow.isDestroyed()) {
-    statusWindow.loadURL(url).catch(() => {});
+    applyWindowTab(tab);
     statusWindow.show();
     statusWindow.focus();
     return;
@@ -162,19 +308,44 @@ function createStatusWindow(targetPath) {
     height: 900,
     minWidth: 960,
     minHeight: 640,
-    title: "wehelper 控制台",
+    title: "灵识 Lingshi 控制台",
     autoHideMenuBar: true,
-    webPreferences: {
-      preload: path.join(__dirname, "preload.cjs"),
-      contextIsolation: true,
-      sandbox: true,
-    },
+    webPreferences: webPrefs,
   });
 
-  statusWindow.loadURL(url).catch(() => {});
+  statusWindow.loadURL(pathToFileURL(controlUiIndex).toString()).catch(() => {});
+  statusWindow.webContents.once("did-finish-load", () => {
+    applyWindowTab(tab);
+  });
   statusWindow.on("closed", () => {
     statusWindow = null;
   });
+}
+
+function openStatusWindowWhenUiReady(targetPath, opts = {}) {
+  const timeoutMs = Number.isFinite(opts.timeoutMs) ? Math.max(0, opts.timeoutMs) : 12_000;
+  const pollMs = Number.isFinite(opts.pollMs) ? Math.max(100, opts.pollMs) : 300;
+  const deadline = Date.now() + timeoutMs;
+
+  if (pendingUiOpenTimer) {
+    clearTimeout(pendingUiOpenTimer);
+    pendingUiOpenTimer = null;
+  }
+
+  const tryOpen = () => {
+    const controlUiIndex = resolveLocalControlUiIndex();
+    if (controlUiIndex) {
+      createStatusWindow(targetPath, controlUiIndex);
+      return;
+    }
+    if (Date.now() >= deadline) {
+      createStatusWindow(targetPath);
+      return;
+    }
+    pendingUiOpenTimer = setTimeout(tryOpen, pollMs);
+  };
+
+  tryOpen();
 }
 
 function killProcessTree(child, signal) {
@@ -350,7 +521,7 @@ function startGateway() {
   if (!runtime) {
     dialog.showErrorBox(
       "网关启动失败",
-      "未找到内置运行时（Node / wehelperBot）。\n请重新安装桌面端，或设置 WEHELPER_NODE_BIN 与 WEHELPER_BOT_DIR 后重试。",
+      "未找到内置运行时（Node / lingshi_bot）。\n请重新安装桌面端，或设置 LINGSHI_NODE_BIN 与 LINGSHI_BOT_DIR 后重试。",
     );
     return false;
   }
@@ -422,6 +593,10 @@ async function shutdownDesktop() {
       tray.destroy();
       tray = null;
     }
+    if (pendingUiOpenTimer) {
+      clearTimeout(pendingUiOpenTimer);
+      pendingUiOpenTimer = null;
+    }
     stopGateway();
     // Final synchronous fallback: ensure gateway listener is gone before app exits.
     killGatewayByPortSync();
@@ -459,7 +634,7 @@ function updateTrayMenu() {
   const runtimeText = resolvedGateway
     ? `${portText}\nNode: ${resolvedGateway.nodeBin}\nBot: ${resolvedGateway.botDir}`
     : "Node/Bot: 未解析";
-  tray.setToolTip(`wehelperDesktop - ${statusText}`);
+  tray.setToolTip(`lingshi_desktop - ${statusText}`);
 
   const template = [
     { label: statusText, enabled: false },
@@ -467,11 +642,11 @@ function updateTrayMenu() {
     { type: "separator" },
     {
       label: "打开状态页",
-      click: () => createStatusWindow("/wecom"),
+      click: () => openStatusWindowWhenUiReady("/wecom"),
     },
     {
       label: "打开供应商页",
-      click: () => createStatusWindow("/providers"),
+      click: () => openStatusWindowWhenUiReady("/providers"),
     },
     { type: "separator" },
     {
@@ -507,11 +682,15 @@ function createTray() {
     icon = nativeImage.createEmpty();
   }
   if (process.platform === "darwin") {
+    // Keep tray icon at menu-bar scale even if source PNG is large.
+    icon = icon.resize({ width: 18, height: 18, quality: "best" });
     icon.setTemplateImage(true);
+  } else {
+    icon = icon.resize({ width: 16, height: 16, quality: "best" });
   }
 
   tray = new Tray(icon);
-  tray.on("double-click", () => createStatusWindow("/wecom"));
+  tray.on("double-click", () => openStatusWindowWhenUiReady("/chat"));
   updateTrayMenu();
 }
 
@@ -519,6 +698,7 @@ app.whenReady().then(async () => {
   gatewayPort = await resolveGatewayPort();
   const started = startGateway();
   createTray();
+  openStatusWindowWhenUiReady("/chat");
   if (started) {
     probeHealth();
     healthTimer = setInterval(probeHealth, 8000);

@@ -1,6 +1,6 @@
 import { html } from "lit";
 import type { WecomKfStatus, WecomKfStartConfig } from "../controllers/wecom-kf.ts";
-import { t } from "../i18n.ts";
+import { tr } from "../i18n.ts";
 
 const DEFAULT_SERVER_BASE_URL = "http://8.148.182.238:8080";
 
@@ -87,41 +87,38 @@ export function renderWecomKf(props: WecomKfProps) {
   const wsConnecting = device?.wsConnecting === true;
   const routeOnline = device?.online === true;
   const connectionLabel = wsConnected
-    ? t("Connected", "已连接")
+    ? tr("wecom.connection.connected")
     : wsConnecting
-      ? t("Connecting", "连接中")
-      : t("Disconnected", "未连接");
+      ? tr("wecom.connection.connecting")
+      : tr("wecom.connection.disconnected");
   const connectionDetail = routeOnline
-    ? t("Server marks device online", "服务端判定设备在线")
-    : t("Server marks device offline", "服务端判定设备离线");
+    ? tr("wecom.connection.serverOnline")
+    : tr("wecom.connection.serverOffline");
 
   return html`
     <section class="page">
       <div class="page-title">
         <div>
-          <h1>${t("WeCom KF Integration", "微信客服集成")}</h1>
+          <h1>${tr("wecom.title")}</h1>
           <p class="muted">
-            ${t(
-              "Configure server URL and monitor binding state via short code.",
-              "配置服务端地址，并通过短码监控绑定状态。",
-            )}
+            ${tr("wecom.subtitle")}
           </p>
         </div>
         <div class="row" style="gap: 8px; flex-wrap: wrap;">
           <button class="btn" ?disabled=${props.loading} @click=${() => props.onRefresh()}>
-            ${t("Refresh", "刷新")}
+            ${tr("common.refresh")}
           </button>
           <button class="btn" ?disabled=${props.loading} @click=${() => props.onConfigSave()}>
-            ${props.configDirty ? t("Save Config", "保存配置") : t("Config Saved", "配置已保存")}
+            ${props.configDirty ? tr("common.saveConfig") : tr("common.configSaved")}
           </button>
         </div>
       </div>
 
       <div class="card" style="margin-top: 16px;">
-        <h2>${t("Gateway Mapping", "网关映射配置")}</h2>
+        <h2>${tr("wecom.gatewayMapping")}</h2>
         <div class="row" style="gap: 16px; flex-wrap: wrap;">
           <label class="field" style="min-width: 260px; flex: 1;">
-            <span>WEHELPER_SERVER_BASE_URL</span>
+            <span>LINGSHI_SERVER_BASE_URL</span>
             <input
               class="input"
               .value=${serverBaseUrl}
@@ -134,11 +131,11 @@ export function renderWecomKf(props: WecomKfProps) {
             />
           </label>
           <label class="field" style="min-width: 260px; flex: 1;">
-            <span>WEHELPER_DEVICE_ID</span>
+            <span>LINGSHI_DEVICE_ID</span>
             <input
               class="input"
               .value=${deviceId}
-              placeholder="bot-001 (optional)"
+              placeholder=${tr("wecom.deviceIdPlaceholder")}
               ?disabled=${deviceIdLocked}
               @input=${(ev: Event) =>
                 props.onConfigPatch(
@@ -151,16 +148,13 @@ export function renderWecomKf(props: WecomKfProps) {
         ${
           deviceIdLocked
             ? html`<div class="callout warn" style="margin-top: 10px;">
-                ${t(
-                  "Device ID is locked while bound. Unbind first, then rename.",
-                  "设备已绑定时设备名不可修改。请先解绑，再修改设备名。",
-                )}
+                ${tr("wecom.deviceIdLocked")}
               </div>`
             : ""
         }
         <div class="row" style="gap: 16px; flex-wrap: wrap; margin-top: 12px;">
           <label class="field" style="min-width: 260px; flex: 1;">
-            <span>${t("Only Process New Messages", "只处理最新消息")}</span>
+            <span>${tr("wecom.onlyProcessNewMessages")}</span>
             <label class="toggle">
               <input
                 type="checkbox"
@@ -168,24 +162,24 @@ export function renderWecomKf(props: WecomKfProps) {
                 @change=${(ev: Event) =>
                   props.onSkipHistoryChange((ev.target as HTMLInputElement).checked)}
               />
-              <span>${skipHistory ? t("Enabled", "已开启") : t("Disabled", "未开启")}</span>
+              <span>${skipHistory ? tr("common.enabled") : tr("common.disabled")}</span>
             </label>
           </label>
         </div>
       </div>
 
       <div class="card" style="margin-top: 16px;">
-        <h2>${t("Service Control", "服务控制")}</h2>
+        <h2>${tr("wecom.serviceControl")}</h2>
         <div class="row" style="gap: 8px; flex-wrap: wrap;">
           <button
             class="btn"
             ?disabled=${props.busy || !props.connected}
             @click=${() => props.onStart(startConfig)}
           >
-            ${t("Start", "启动")}
+            ${tr("common.start")}
           </button>
           <button class="btn" ?disabled=${props.busy} @click=${() => props.onStop()}>
-            ${t("Stop", "停止")}
+            ${tr("common.stop")}
           </button>
         </div>
         ${
@@ -196,60 +190,58 @@ export function renderWecomKf(props: WecomKfProps) {
         ${
           missing.length > 0
             ? html`<div class="callout warn" style="margin-top: 10px;">
-                ${t("Missing:", "缺少：")} ${missing.join(", ")}
+                ${tr("wecom.missing")} ${missing.join(", ")}
               </div>`
             : ""
         }
       </div>
 
       <div class="card" style="margin-top: 16px;">
-        <h2>${t("Binding & Link State", "绑定与连接状态")}</h2>
+        <h2>${tr("wecom.bindingLinkState")}</h2>
         <div class="muted">
-          ${t("Service", "服务")}: ${status?.running ? t("Running", "运行中") : t("Stopped", "已停止")}
+          ${tr("wecom.service")}: ${status?.running ? tr("wecom.running") : tr("wecom.stopped")}
           <br />
-          ${t("Tunnel", "隧道")}: ${
-            status?.tunnelRunning ? t("Running", "运行中") : t("Stopped", "已停止")
+          ${tr("wecom.tunnel")}: ${
+            status?.tunnelRunning ? tr("wecom.running") : tr("wecom.stopped")
           }
         </div>
         <div style="margin-top: 8px;">
-          <div>${t("Public URL", "公网地址")}: <span class="mono">${publicUrl || "-"}</span></div>
+          <div>${tr("wecom.publicUrl")}: <span class="mono">${publicUrl || "-"}</span></div>
           <div style="margin-top: 6px;">
-            ${t("Callback URL", "回调地址")}: <span class="mono">${callbackUrl || "-"}</span>
+            ${tr("wecom.callbackUrl")}: <span class="mono">${callbackUrl || "-"}</span>
           </div>
         </div>
         <div style="margin-top: 10px;">
-          <div>${t("Device ID", "设备ID")}: <span class="mono">${device?.deviceId || "-"}</span></div>
+          <div>${tr("wecom.deviceId")}: <span class="mono">${device?.deviceId || "-"}</span></div>
           <div style="margin-top: 6px;">
-            ${t("Bind State", "绑定状态")}: ${
-              device?.isBound ? t("Bound", "已绑定") : t("Unbound", "未绑定")
-            }
+            ${tr("wecom.bindState")}: ${device?.isBound ? tr("wecom.bound") : tr("wecom.unbound")}
           </div>
           <div style="margin-top: 6px;">
-            ${t("Connection", "连接状态")}: ${connectionLabel}
+            ${tr("wecom.connection")}: ${connectionLabel}
             <span class="muted">(${connectionDetail})</span>
           </div>
           <div style="margin-top: 6px;">
-            ${t("Short Code", "短码")}: <span class="mono">${device?.shortCode || "-"}</span>
+            ${tr("wecom.shortCode")}: <span class="mono">${device?.shortCode || "-"}</span>
           </div>
           <div style="margin-top: 6px;">
-            ${t("Code Countdown", "短码倒计时")}: ${formatDuration(device?.expiresInSeconds)}
+            ${tr("wecom.codeCountdown")}: ${formatDuration(device?.expiresInSeconds)}
           </div>
           <div style="margin-top: 6px;">
-            ${t("Last Seen", "最近在线")}: ${formatTs(device?.lastSeenAt)}
+            ${tr("wecom.lastSeen")}: ${formatTs(device?.lastSeenAt)}
           </div>
           <div style="margin-top: 6px;">
-            ${t("WS Last Connected", "WS最近连接")}: ${formatTs(device?.wsLastConnectedAt)}
+            ${tr("wecom.wsLastConnected")}: ${formatTs(device?.wsLastConnectedAt)}
           </div>
           <div style="margin-top: 6px;">
-            ${t("Bound User", "绑定用户")}: ${device?.binding?.externalUserid || "-"}
+            ${tr("wecom.boundUser")}: ${device?.binding?.externalUserid || "-"}
           </div>
         </div>
         <div class="row" style="gap: 8px; flex-wrap: wrap; margin-top: 12px;">
           <button class="btn" ?disabled=${props.busy || !device?.isBound} @click=${() => props.onUnbind()}>
-            ${t("Unbind", "解绑")}
+            ${tr("wecom.unbind")}
           </button>
           <button class="btn" ?disabled=${props.loading} @click=${() => props.onRefresh()}>
-            ${t("Refresh State", "刷新状态")}
+            ${tr("wecom.refreshState")}
           </button>
         </div>
         ${

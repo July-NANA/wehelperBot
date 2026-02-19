@@ -1,10 +1,11 @@
 import { html, nothing } from "lit";
 import type { ChannelAccountSnapshot } from "../types.ts";
 import type { ChannelKey, ChannelsProps } from "./channels.types.ts";
+import { t } from "../i18n.ts";
 
 export function formatDuration(ms?: number | null) {
   if (!ms && ms !== 0) {
-    return "n/a";
+    return t("n/a", "暂无");
   }
   const sec = Math.round(ms / 1000);
   if (sec < 60) {
@@ -50,5 +51,5 @@ export function renderChannelAccountCount(
   if (count < 2) {
     return nothing;
   }
-  return html`<div class="account-count">Accounts (${count})</div>`;
+  return html`<div class="account-count">${t("Accounts", "账号数")} (${count})</div>`;
 }

@@ -1,6 +1,6 @@
 import { html, nothing } from "lit";
 import type { ConfigUiHints } from "../types.ts";
-import { t } from "../i18n.ts";
+import { tr } from "../i18n.ts";
 import { hintForPath, humanize, schemaType, type JsonSchema } from "./config-form.shared.ts";
 import { analyzeConfigSchema, renderConfigForm, SECTION_META } from "./config-form.ts";
 
@@ -265,18 +265,18 @@ const sidebarIcons = {
 
 // Section definitions
 const SECTIONS: Array<{ key: string; label: string }> = [
-  { key: "env", label: t("Environment", "环境") },
-  { key: "update", label: t("Updates", "更新") },
-  { key: "agents", label: t("Agents", "助手") },
-  { key: "auth", label: t("Authentication", "认证") },
-  { key: "channels", label: t("Channels", "通道") },
-  { key: "messages", label: t("Messages", "消息") },
-  { key: "commands", label: t("Commands", "命令") },
-  { key: "hooks", label: t("Hooks", "钩子") },
-  { key: "skills", label: t("Skills", "技能") },
-  { key: "tools", label: t("Tools", "工具") },
-  { key: "gateway", label: t("Gateway", "网关") },
-  { key: "wizard", label: t("Setup Wizard", "设置向导") },
+  { key: "env", label: tr("config.section.environment") },
+  { key: "update", label: tr("config.section.updates") },
+  { key: "agents", label: tr("config.section.agents") },
+  { key: "auth", label: tr("config.section.authentication") },
+  { key: "channels", label: tr("config.section.channels") },
+  { key: "messages", label: tr("config.section.messages") },
+  { key: "commands", label: tr("config.section.commands") },
+  { key: "hooks", label: tr("config.section.hooks") },
+  { key: "skills", label: tr("config.section.skills") },
+  { key: "tools", label: tr("config.section.tools") },
+  { key: "gateway", label: tr("config.section.gateway") },
+  { key: "wizard", label: tr("config.section.setupWizard") },
 ];
 
 type SubsectionEntry = {
@@ -501,7 +501,7 @@ export function renderConfig(props: ConfigProps) {
       <!-- Sidebar -->
       <aside class="config-sidebar">
         <div class="config-sidebar__header">
-          <div class="config-sidebar__title">${t("Settings", "设置")}</div>
+          <div class="config-sidebar__title">${tr("config.settings")}</div>
           <span
             class="pill pill--sm ${
               validity === "valid" ? "pill--ok" : validity === "invalid" ? "pill--danger" : ""
@@ -525,7 +525,7 @@ export function renderConfig(props: ConfigProps) {
           <input
             type="text"
             class="config-search__input"
-            placeholder=${t("Search settings...", "搜索设置...")}
+            placeholder=${tr("config.searchSettings")}
             .value=${props.searchQuery}
             @input=${(e: Event) => props.onSearchChange((e.target as HTMLInputElement).value)}
           />
@@ -550,7 +550,7 @@ export function renderConfig(props: ConfigProps) {
             @click=${() => props.onSectionChange(null)}
           >
             <span class="config-nav__icon">${sidebarIcons.all}</span>
-            <span class="config-nav__label">${t("All Settings", "全部设置")}</span>
+            <span class="config-nav__label">${tr("config.allSettings")}</span>
           </button>
           ${allSections.map(
             (section) => html`
@@ -575,13 +575,13 @@ export function renderConfig(props: ConfigProps) {
               ?disabled=${props.schemaLoading || !props.schema}
               @click=${() => props.onFormModeChange("form")}
             >
-              ${t("Form", "表单")}
+              ${tr("config.form")}
             </button>
             <button
               class="config-mode-toggle__btn ${props.formMode === "raw" ? "active" : ""}"
               @click=${() => props.onFormModeChange("raw")}
             >
-              ${t("Raw", "原始")}
+              ${tr("config.raw")}
             </button>
           </div>
         </div>
@@ -598,16 +598,13 @@ export function renderConfig(props: ConfigProps) {
                   <span class="config-changes-badge"
                     >${
                       props.formMode === "raw"
-                        ? t("Unsaved changes", "有未保存的更改")
-                        : t(
-                            `${diff.length} unsaved change${diff.length !== 1 ? "s" : ""}`,
-                            `${diff.length} 处未保存的更改`,
-                          )
+                        ? tr("config.unsavedChanges")
+                        : tr("config.unsavedChangesCount", { count: diff.length })
                     }</span
                   >
                 `
                 : html`
-                    <span class="config-status muted">${t("No changes", "无更改")}</span>
+                    <span class="config-status muted">${tr("config.noChanges")}</span>
                   `
             }
           </div>
@@ -617,28 +614,28 @@ export function renderConfig(props: ConfigProps) {
               ?disabled=${props.loading}
               @click=${props.onReload}
             >
-              ${props.loading ? t("Loading…", "加载中…") : t("Reload", "重新加载")}
+              ${props.loading ? tr("common.loading") : tr("config.reload")}
             </button>
             <button
               class="btn btn--sm primary"
               ?disabled=${!canSave}
               @click=${props.onSave}
             >
-              ${props.saving ? t("Saving…", "保存中…") : t("Save", "保存")}
+              ${props.saving ? tr("common.saving") : tr("common.save")}
             </button>
             <button
               class="btn btn--sm"
               ?disabled=${!canApply}
               @click=${props.onApply}
             >
-              ${props.applying ? t("Applying…", "应用中…") : t("Apply", "应用")}
+              ${props.applying ? tr("common.applying") : tr("config.apply")}
             </button>
             <button
               class="btn btn--sm"
               ?disabled=${!canUpdate}
               @click=${props.onUpdate}
             >
-              ${props.updating ? t("Updating…", "更新中…") : t("Update", "更新")}
+              ${props.updating ? tr("common.updating") : tr("common.update")}
             </button>
           </div>
         </div>
@@ -650,10 +647,7 @@ export function renderConfig(props: ConfigProps) {
               <details class="config-diff">
                 <summary class="config-diff__summary">
                   <span
-                    >${t(
-                      `View ${diff.length} pending change${diff.length !== 1 ? "s" : ""}`,
-                      `查看 ${diff.length} 处待应用更改`,
-                    )}</span
+                    >${tr("config.viewPendingChanges", { count: diff.length })}</span
                   >
                   <svg
                     class="config-diff__chevron"
@@ -718,38 +712,35 @@ export function renderConfig(props: ConfigProps) {
                 <div class="config-section-hero__text" style="display: flex; gap: 12px; flex-wrap: wrap;">
                   <div style="min-width: 220px;">
                     <div class="config-section-hero__title">
-                      ${t("Provider Config", "Provider 配置")}
+                      ${tr("config.providerConfig")}
                     </div>
                     <div class="config-section-hero__desc">
-                      ${t(
-                        "Quick entry to model providers and current summary.",
-                        "快速进入模型 Provider 配置，并查看当前状态摘要。",
-                      )}
+                      ${tr("config.providerConfigHint")}
                     </div>
                   </div>
                   <div class="muted" style="display: grid; gap: 4px; min-width: 260px;">
                     <div>
-                      ${t("Providers", "Provider 数量")}: ${providerSummary.providerCount}
+                      ${tr("config.providers")}: ${providerSummary.providerCount}
                     </div>
                     <div>
-                      ${t("Models", "模型数量")}: ${providerSummary.modelCount}
+                      ${tr("config.models")}: ${providerSummary.modelCount}
                     </div>
                     <div>
-                      ${t("Primary Model", "主模型")}: ${
+                      ${tr("config.primaryModel")}: ${
                         providerSummary.primaryModel
                           ? html`<span class="mono">${providerSummary.primaryModel}</span>`
                           : "-"
                       }
                     </div>
                     <div>
-                      ${t("Image Model", "图像模型")}: ${
+                      ${tr("config.imageModel")}: ${
                         providerSummary.imageModel
                           ? html`<span class="mono">${providerSummary.imageModel}</span>`
                           : "-"
                       }
                     </div>
                     <div>
-                      ${t("Provider List", "Provider 列表")}: ${
+                      ${tr("config.providerList")}: ${
                         providerSummary.providerNames.length > 0
                           ? html`<span class="mono">${providerSummary.providerNames.join(", ")}</span>`
                           : "-"
@@ -766,7 +757,7 @@ export function renderConfig(props: ConfigProps) {
                       props.onSubsectionChange("providers");
                     }}
                   >
-                    ${t("Open Provider Settings", "打开 Provider 配置")}
+                    ${tr("config.openProviderSettings")}
                   </button>
                 </div>
               </div>
@@ -781,7 +772,7 @@ export function renderConfig(props: ConfigProps) {
                   class="config-subnav__item ${effectiveSubsection === null ? "active" : ""}"
                   @click=${() => props.onSubsectionChange(ALL_SUBSECTION)}
                 >
-                  All
+                  ${tr("config.subnav.all")}
                 </button>
                 ${subsections.map(
                   (entry) => html`
@@ -811,7 +802,7 @@ export function renderConfig(props: ConfigProps) {
                     ? html`
                         <div class="config-loading">
                           <div class="config-loading__spinner"></div>
-                          <span>${t("Loading schema…", "加载配置架构…")}</span>
+                          <span>${tr("config.loadingSchema")}</span>
                         </div>
                       `
                     : renderConfigForm({
@@ -830,10 +821,7 @@ export function renderConfig(props: ConfigProps) {
                   formUnsafe
                     ? html`
                         <div class="callout danger" style="margin-top: 12px">
-                          ${t(
-                            "Form view can't safely edit some fields. Use Raw to avoid losing config entries.",
-                            "表单模式无法安全编辑部分字段。请使用原始模式以避免配置丢失。",
-                          )}
+                          ${tr("config.formUnsafe")}
                         </div>
                       `
                     : nothing
@@ -841,7 +829,7 @@ export function renderConfig(props: ConfigProps) {
               `
               : html`
                 <label class="field config-raw-field">
-                  <span>${t("Raw JSON5", "原始 JSON5")}</span>
+                  <span>${tr("config.rawJson5")}</span>
                   <textarea
                     .value=${props.raw}
                     @input=${(e: Event) =>

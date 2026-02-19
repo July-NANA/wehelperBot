@@ -17,6 +17,7 @@ import {
   resolveToolProfilePolicy,
 } from "../../../../src/agents/tool-policy.js";
 import { formatAgo } from "../format.ts";
+import { t } from "../i18n.ts";
 import {
   formatCronPayload,
   formatCronSchedule,
@@ -445,7 +446,7 @@ function buildModelOptions(configForm: Record<string, unknown> | null, current?:
   }
   if (options.length === 0) {
     return html`
-      <option value="" disabled>No configured models</option>
+      <option value="" disabled>${t("No configured models", "没有已配置模型")}</option>
     `;
   }
   return options.map((option) => html`<option value=${option.value}>${option.label}</option>`);
@@ -547,11 +548,11 @@ export function renderAgents(props: AgentsProps) {
       <section class="card agents-sidebar">
         <div class="row" style="justify-content: space-between;">
           <div>
-            <div class="card-title">Agents</div>
-            <div class="card-sub">${agents.length} configured.</div>
+            <div class="card-title">${t("Agents", "Agent 列表")}</div>
+            <div class="card-sub">${agents.length} ${t("configured.", "已配置。")}</div>
           </div>
           <button class="btn btn--sm" ?disabled=${props.loading} @click=${props.onRefresh}>
-            ${props.loading ? "Loading…" : "Refresh"}
+            ${props.loading ? t("Loading…", "加载中…") : t("Refresh", "刷新")}
           </button>
         </div>
         ${
@@ -563,7 +564,7 @@ export function renderAgents(props: AgentsProps) {
           ${
             agents.length === 0
               ? html`
-                  <div class="muted">No agents found.</div>
+                  <div class="muted">${t("No agents found.", "未找到 Agent。")}</div>
                 `
               : agents.map((agent) => {
                   const badge = agentBadgeText(agent.id, defaultId);
@@ -593,8 +594,8 @@ export function renderAgents(props: AgentsProps) {
           !selectedAgent
             ? html`
                 <div class="card">
-                  <div class="card-title">Select an agent</div>
-                  <div class="card-sub">Pick an agent to inspect its workspace and tools.</div>
+                  <div class="card-title">${t("Select an agent", "选择一个 Agent")}</div>
+                  <div class="card-sub">${t("Pick an agent to inspect its workspace and tools.", "选择 Agent 以查看其工作区与工具配置。")}</div>
                 </div>
               `
             : html`
@@ -750,12 +751,12 @@ function renderAgentHeader(
 
 function renderAgentTabs(active: AgentsPanel, onSelect: (panel: AgentsPanel) => void) {
   const tabs: Array<{ id: AgentsPanel; label: string }> = [
-    { id: "overview", label: "Overview" },
-    { id: "files", label: "Files" },
-    { id: "tools", label: "Tools" },
-    { id: "skills", label: "Skills" },
-    { id: "channels", label: "Channels" },
-    { id: "cron", label: "Cron Jobs" },
+    { id: "overview", label: t("Overview", "概览") },
+    { id: "files", label: t("Files", "文件") },
+    { id: "tools", label: t("Tools", "工具") },
+    { id: "skills", label: t("Skills", "技能") },
+    { id: "channels", label: t("Channels", "通道") },
+    { id: "cron", label: t("Cron Jobs", "Cron 任务") },
   ];
   return html`
     <div class="agent-tabs">
@@ -833,49 +834,49 @@ function renderAgentOverview(params: {
   const skillFilter = Array.isArray(config.entry?.skills) ? config.entry?.skills : null;
   const skillCount = skillFilter?.length ?? null;
   const identityStatus = agentIdentityLoading
-    ? "Loading…"
+    ? t("Loading…", "加载中…")
     : agentIdentityError
-      ? "Unavailable"
+      ? t("Unavailable", "不可用")
       : "";
   const isDefault = Boolean(params.defaultId && agent.id === params.defaultId);
 
   return html`
     <section class="card">
-      <div class="card-title">Overview</div>
-      <div class="card-sub">Workspace paths and identity metadata.</div>
+      <div class="card-title">${t("Overview", "概览")}</div>
+      <div class="card-sub">${t("Workspace paths and identity metadata.", "工作区路径与身份元数据。")}</div>
       <div class="agents-overview-grid" style="margin-top: 16px;">
         <div class="agent-kv">
-          <div class="label">Workspace</div>
+          <div class="label">${t("Workspace", "工作区")}</div>
           <div class="mono">${workspace}</div>
         </div>
         <div class="agent-kv">
-          <div class="label">Primary Model</div>
+          <div class="label">${t("Primary Model", "主模型")}</div>
           <div class="mono">${model}</div>
         </div>
         <div class="agent-kv">
-          <div class="label">Identity Name</div>
+          <div class="label">${t("Identity Name", "身份名称")}</div>
           <div>${identityName}</div>
           ${identityStatus ? html`<div class="agent-kv-sub muted">${identityStatus}</div>` : nothing}
         </div>
         <div class="agent-kv">
-          <div class="label">Default</div>
-          <div>${isDefault ? "yes" : "no"}</div>
+          <div class="label">${t("Default", "默认")}</div>
+          <div>${isDefault ? t("yes", "是") : t("no", "否")}</div>
         </div>
         <div class="agent-kv">
-          <div class="label">Identity Emoji</div>
+          <div class="label">${t("Identity Emoji", "身份表情")}</div>
           <div>${identityEmoji}</div>
         </div>
         <div class="agent-kv">
-          <div class="label">Skills Filter</div>
-          <div>${skillFilter ? `${skillCount} selected` : "all skills"}</div>
+          <div class="label">${t("Skills Filter", "技能过滤")}</div>
+          <div>${skillFilter ? `${skillCount} ${t("selected", "已选择")}` : t("all skills", "全部技能")}</div>
         </div>
       </div>
 
       <div class="agent-model-select" style="margin-top: 20px;">
-        <div class="label">Model Selection</div>
+        <div class="label">${t("Model Selection", "模型选择")}</div>
         <div class="row" style="gap: 12px; flex-wrap: wrap;">
           <label class="field" style="min-width: 260px; flex: 1;">
-            <span>Primary model</span>
+            <span>${t("Primary model", "主模型")}</span>
             <select
               .value=${effectivePrimary ?? ""}
               ?disabled=${!configForm || configLoading || configSaving}
@@ -883,17 +884,17 @@ function renderAgentOverview(params: {
                 onModelChange(agent.id, (e.target as HTMLSelectElement).value || null)}
             >
               <option value="">
-                ${defaultPrimary ? `Inherit default (${defaultPrimary})` : "Inherit default"}
+                ${defaultPrimary ? `${t("Inherit default", "继承默认")} (${defaultPrimary})` : t("Inherit default", "继承默认")}
               </option>
               ${buildModelOptions(configForm, effectivePrimary ?? undefined)}
             </select>
           </label>
           <label class="field" style="min-width: 260px; flex: 1;">
-            <span>Fallbacks (comma-separated)</span>
+            <span>${t("Fallbacks (comma-separated)", "回退模型（逗号分隔）")}</span>
             <input
               .value=${fallbackText}
               ?disabled=${!configForm || configLoading || configSaving}
-              placeholder="provider/model, provider/model"
+              placeholder=${t("provider/model, provider/model", "provider/model, provider/model")}
               @input=${(e: Event) =>
                 onModelFallbacksChange(
                   agent.id,
@@ -908,14 +909,14 @@ function renderAgentOverview(params: {
             ?disabled=${configLoading}
             @click=${onConfigReload}
           >
-            Reload Config
+            ${t("Reload Config", "重新加载配置")}
           </button>
           <button
             class="btn btn--sm primary"
             ?disabled=${configSaving || !configDirty}
             @click=${onConfigSave}
           >
-            ${configSaving ? "Saving…" : "Save"}
+            ${configSaving ? t("Saving…", "保存中…") : t("Save", "保存")}
           </button>
         </div>
       </div>
@@ -926,32 +927,32 @@ function renderAgentOverview(params: {
 function renderAgentContextCard(context: AgentContext, subtitle: string) {
   return html`
     <section class="card">
-      <div class="card-title">Agent Context</div>
+      <div class="card-title">${t("Agent Context", "Agent 上下文")}</div>
       <div class="card-sub">${subtitle}</div>
       <div class="agents-overview-grid" style="margin-top: 16px;">
         <div class="agent-kv">
-          <div class="label">Workspace</div>
+          <div class="label">${t("Workspace", "工作区")}</div>
           <div class="mono">${context.workspace}</div>
         </div>
         <div class="agent-kv">
-          <div class="label">Primary Model</div>
+          <div class="label">${t("Primary Model", "主模型")}</div>
           <div class="mono">${context.model}</div>
         </div>
         <div class="agent-kv">
-          <div class="label">Identity Name</div>
+          <div class="label">${t("Identity Name", "身份名称")}</div>
           <div>${context.identityName}</div>
         </div>
         <div class="agent-kv">
-          <div class="label">Identity Emoji</div>
+          <div class="label">${t("Identity Emoji", "身份表情")}</div>
           <div>${context.identityEmoji}</div>
         </div>
         <div class="agent-kv">
-          <div class="label">Skills Filter</div>
+          <div class="label">${t("Skills Filter", "技能过滤")}</div>
           <div>${context.skillsLabel}</div>
         </div>
         <div class="agent-kv">
-          <div class="label">Default</div>
-          <div>${context.isDefault ? "yes" : "no"}</div>
+          <div class="label">${t("Default", "默认")}</div>
+          <div>${context.isDefault ? t("yes", "是") : t("no", "否")}</div>
         </div>
       </div>
     </section>
@@ -1104,22 +1105,22 @@ function renderAgentChannels(params: {
     params.agentIdentity,
   );
   const entries = resolveChannelEntries(params.snapshot);
-  const lastSuccessLabel = params.lastSuccess ? formatAgo(params.lastSuccess) : "never";
+  const lastSuccessLabel = params.lastSuccess ? formatAgo(params.lastSuccess) : t("never", "从未");
   return html`
     <section class="grid grid-cols-2">
-      ${renderAgentContextCard(context, "Workspace, identity, and model configuration.")}
+      ${renderAgentContextCard(context, t("Workspace, identity, and model configuration.", "工作区、身份与模型配置。"))}
       <section class="card">
         <div class="row" style="justify-content: space-between;">
           <div>
-            <div class="card-title">Channels</div>
-            <div class="card-sub">Gateway-wide channel status snapshot.</div>
+            <div class="card-title">${t("Channels", "通道")}</div>
+            <div class="card-sub">${t("Gateway-wide channel status snapshot.", "全局通道状态快照。")}</div>
           </div>
           <button class="btn btn--sm" ?disabled=${params.loading} @click=${params.onRefresh}>
-            ${params.loading ? "Refreshing…" : "Refresh"}
+            ${params.loading ? t("Refreshing…", "刷新中…") : t("Refresh", "刷新")}
           </button>
         </div>
         <div class="muted" style="margin-top: 8px;">
-          Last refresh: ${lastSuccessLabel}
+          ${t("Last refresh", "上次刷新")}: ${lastSuccessLabel}
         </div>
         ${
           params.error
@@ -1129,26 +1130,28 @@ function renderAgentChannels(params: {
         ${
           !params.snapshot
             ? html`
-                <div class="callout info" style="margin-top: 12px">Load channels to see live status.</div>
+                <div class="callout info" style="margin-top: 12px">${t("Load channels to see live status.", "加载通道后可查看实时状态。")}</div>
               `
             : nothing
         }
         ${
           entries.length === 0
             ? html`
-                <div class="muted" style="margin-top: 16px">No channels found.</div>
+                <div class="muted" style="margin-top: 16px">${t("No channels found.", "未找到通道。")}</div>
               `
             : html`
               <div class="list" style="margin-top: 16px;">
                 ${entries.map((entry) => {
                   const summary = summarizeChannelAccounts(entry.accounts);
                   const status = summary.total
-                    ? `${summary.connected}/${summary.total} connected`
-                    : "no accounts";
+                    ? `${summary.connected}/${summary.total} ${t("connected", "已连接")}`
+                    : t("no accounts", "无账号");
                   const config = summary.configured
-                    ? `${summary.configured} configured`
-                    : "not configured";
-                  const enabled = summary.total ? `${summary.enabled} enabled` : "disabled";
+                    ? `${summary.configured} ${t("configured", "已配置")}`
+                    : t("not configured", "未配置");
+                  const enabled = summary.total
+                    ? `${summary.enabled} ${t("enabled", "启用")}`
+                    : t("disabled", "禁用");
                   const extras = resolveChannelExtras(params.configForm, entry.id);
                   return html`
                     <div class="list-item">
@@ -1199,30 +1202,30 @@ function renderAgentCron(params: {
   const jobs = params.jobs.filter((job) => job.agentId === params.agent.id);
   return html`
     <section class="grid grid-cols-2">
-      ${renderAgentContextCard(context, "Workspace and scheduling targets.")}
+      ${renderAgentContextCard(context, t("Workspace and scheduling targets.", "工作区与调度目标。"))}
       <section class="card">
         <div class="row" style="justify-content: space-between;">
           <div>
-            <div class="card-title">Scheduler</div>
-            <div class="card-sub">Gateway cron status.</div>
+            <div class="card-title">${t("Scheduler", "调度器")}</div>
+            <div class="card-sub">${t("Gateway cron status.", "网关 Cron 状态。")}</div>
           </div>
           <button class="btn btn--sm" ?disabled=${params.loading} @click=${params.onRefresh}>
-            ${params.loading ? "Refreshing…" : "Refresh"}
+            ${params.loading ? t("Refreshing…", "刷新中…") : t("Refresh", "刷新")}
           </button>
         </div>
         <div class="stat-grid" style="margin-top: 16px;">
           <div class="stat">
-            <div class="stat-label">Enabled</div>
+            <div class="stat-label">${t("Enabled", "已启用")}</div>
             <div class="stat-value">
-              ${params.status ? (params.status.enabled ? "Yes" : "No") : "n/a"}
+              ${params.status ? (params.status.enabled ? t("Yes", "是") : t("No", "否")) : t("n/a", "暂无")}
             </div>
           </div>
           <div class="stat">
-            <div class="stat-label">Jobs</div>
-            <div class="stat-value">${params.status?.jobs ?? "n/a"}</div>
+            <div class="stat-label">${t("Jobs", "任务数")}</div>
+            <div class="stat-value">${params.status?.jobs ?? t("n/a", "暂无")}</div>
           </div>
           <div class="stat">
-            <div class="stat-label">Next wake</div>
+            <div class="stat-label">${t("Next wake", "下次唤醒")}</div>
             <div class="stat-value">${formatNextRun(params.status?.nextWakeAtMs ?? null)}</div>
           </div>
         </div>
@@ -1234,12 +1237,12 @@ function renderAgentCron(params: {
       </section>
     </section>
     <section class="card">
-      <div class="card-title">Agent Cron Jobs</div>
-      <div class="card-sub">Scheduled jobs targeting this agent.</div>
+      <div class="card-title">${t("Agent Cron Jobs", "Agent Cron 任务")}</div>
+      <div class="card-sub">${t("Scheduled jobs targeting this agent.", "面向该 Agent 的定时任务。")}</div>
       ${
         jobs.length === 0
           ? html`
-              <div class="muted" style="margin-top: 16px">No jobs assigned.</div>
+              <div class="muted" style="margin-top: 16px">${t("No jobs assigned.", "没有分配任务。")}</div>
             `
           : html`
               <div class="list" style="margin-top: 16px;">
@@ -1252,7 +1255,7 @@ function renderAgentCron(params: {
                       <div class="chip-row" style="margin-top: 6px;">
                         <span class="chip">${formatCronSchedule(job)}</span>
                         <span class="chip ${job.enabled ? "chip-ok" : "chip-warn"}">
-                          ${job.enabled ? "enabled" : "disabled"}
+                          ${job.enabled ? t("enabled", "已启用") : t("disabled", "已禁用")}
                         </span>
                         <span class="chip">${job.sessionTarget}</span>
                       </div>
@@ -1298,18 +1301,18 @@ function renderAgentFiles(params: {
     <section class="card">
       <div class="row" style="justify-content: space-between;">
         <div>
-          <div class="card-title">Core Files</div>
-          <div class="card-sub">Bootstrap persona, identity, and tool guidance.</div>
+          <div class="card-title">${t("Core Files", "核心文件")}</div>
+          <div class="card-sub">${t("Bootstrap persona, identity, and tool guidance.", "启动人设、身份与工具指引。")}</div>
         </div>
         <button
           class="btn btn--sm"
           ?disabled=${params.agentFilesLoading}
           @click=${() => params.onLoadFiles(params.agentId)}
         >
-          ${params.agentFilesLoading ? "Loading…" : "Refresh"}
+          ${params.agentFilesLoading ? t("Loading…", "加载中…") : t("Refresh", "刷新")}
         </button>
       </div>
-      ${list ? html`<div class="muted mono" style="margin-top: 8px;">Workspace: ${list.workspace}</div>` : nothing}
+      ${list ? html`<div class="muted mono" style="margin-top: 8px;">${t("Workspace", "工作区")}: ${list.workspace}</div>` : nothing}
       ${
         params.agentFilesError
           ? html`<div class="callout danger" style="margin-top: 12px;">${
@@ -1321,7 +1324,7 @@ function renderAgentFiles(params: {
         !list
           ? html`
               <div class="callout info" style="margin-top: 12px">
-                Load the agent workspace files to edit core instructions.
+                ${t("Load the agent workspace files to edit core instructions.", "加载 Agent 工作区文件后可编辑核心指令。")}
               </div>
             `
           : html`
@@ -1330,7 +1333,7 @@ function renderAgentFiles(params: {
                   ${
                     files.length === 0
                       ? html`
-                          <div class="muted">No files found.</div>
+                          <div class="muted">${t("No files found.", "未找到文件。")}</div>
                         `
                       : files.map((file) =>
                           renderAgentFileRow(file, active, () => params.onSelectFile(file.name)),
@@ -1341,7 +1344,7 @@ function renderAgentFiles(params: {
                   ${
                     !activeEntry
                       ? html`
-                          <div class="muted">Select a file to edit.</div>
+                          <div class="muted">${t("Select a file to edit.", "请选择文件进行编辑。")}</div>
                         `
                       : html`
                           <div class="agent-file-header">
@@ -1355,14 +1358,14 @@ function renderAgentFiles(params: {
                                 ?disabled=${!isDirty}
                                 @click=${() => params.onFileReset(activeEntry.name)}
                               >
-                                Reset
+                                ${t("Reset", "重置")}
                               </button>
                               <button
                                 class="btn btn--sm primary"
                                 ?disabled=${params.agentFileSaving || !isDirty}
                                 @click=${() => params.onFileSave(activeEntry.name)}
                               >
-                                ${params.agentFileSaving ? "Saving…" : "Save"}
+                                ${params.agentFileSaving ? t("Saving…", "保存中…") : t("Save", "保存")}
                               </button>
                             </div>
                           </div>
@@ -1370,13 +1373,13 @@ function renderAgentFiles(params: {
                             activeEntry.missing
                               ? html`
                                   <div class="callout info" style="margin-top: 10px">
-                                    This file is missing. Saving will create it in the agent workspace.
+                                    ${t("This file is missing. Saving will create it in the agent workspace.", "该文件不存在。保存后会在 Agent 工作区创建它。")}
                                   </div>
                                 `
                               : nothing
                           }
                           <label class="field" style="margin-top: 12px;">
-                            <span>Content</span>
+                            <span>${t("Content", "内容")}</span>
                             <textarea
                               .value=${draft}
                               @input=${(e: Event) =>
@@ -1398,7 +1401,7 @@ function renderAgentFiles(params: {
 
 function renderAgentFileRow(file: AgentFileEntry, active: string | null, onSelect: () => void) {
   const status = file.missing
-    ? "Missing"
+    ? t("Missing", "缺失")
     : `${formatBytes(file.size)} · ${formatAgo(file.updatedAtMs ?? null)}`;
   return html`
     <button
@@ -1413,7 +1416,7 @@ function renderAgentFileRow(file: AgentFileEntry, active: string | null, onSelec
       ${
         file.missing
           ? html`
-              <span class="agent-pill warn">missing</span>
+              <span class="agent-pill warn">${t("missing", "缺失")}</span>
             `
           : nothing
       }
@@ -1437,10 +1440,10 @@ function renderAgentTools(params: {
   const globalTools = config.globalTools ?? {};
   const profile = agentTools.profile ?? globalTools.profile ?? "full";
   const profileSource = agentTools.profile
-    ? "agent override"
+    ? t("agent override", "Agent 覆盖")
     : globalTools.profile
-      ? "global default"
-      : "default";
+      ? t("global default", "全局默认")
+      : t("default", "默认");
   const hasAgentAllow = Array.isArray(agentTools.allow) && agentTools.allow.length > 0;
   const hasGlobalAllow = Array.isArray(globalTools.allow) && globalTools.allow.length > 0;
   const editable =
@@ -1517,10 +1520,10 @@ function renderAgentTools(params: {
     <section class="card">
       <div class="row" style="justify-content: space-between;">
         <div>
-          <div class="card-title">Tool Access</div>
+          <div class="card-title">${t("Tool Access", "工具访问")}</div>
           <div class="card-sub">
-            Profile + per-tool overrides for this agent.
-            <span class="mono">${enabledCount}/${toolIds.length}</span> enabled.
+            ${t("Profile + per-tool overrides for this agent.", "该 Agent 的配置模板与单工具覆盖。")}
+            <span class="mono">${enabledCount}/${toolIds.length}</span> ${t("enabled.", "已启用。")}
           </div>
         </div>
         <div class="row" style="gap: 8px;">
@@ -1529,28 +1532,28 @@ function renderAgentTools(params: {
             ?disabled=${!editable}
             @click=${() => updateAll(true)}
           >
-            Enable All
+            ${t("Enable All", "全部启用")}
           </button>
           <button
             class="btn btn--sm"
             ?disabled=${!editable}
             @click=${() => updateAll(false)}
           >
-            Disable All
+            ${t("Disable All", "全部禁用")}
           </button>
           <button
             class="btn btn--sm"
             ?disabled=${params.configLoading}
             @click=${params.onConfigReload}
           >
-            Reload Config
+            ${t("Reload Config", "重新加载配置")}
           </button>
           <button
             class="btn btn--sm primary"
             ?disabled=${params.configSaving || !params.configDirty}
             @click=${params.onConfigSave}
           >
-            ${params.configSaving ? "Saving…" : "Save"}
+            ${params.configSaving ? t("Saving…", "保存中…") : t("Save", "保存")}
           </button>
         </div>
       </div>
@@ -1559,7 +1562,7 @@ function renderAgentTools(params: {
         !params.configForm
           ? html`
               <div class="callout info" style="margin-top: 12px">
-                Load the gateway config to adjust tool profiles.
+                ${t("Load the gateway config to adjust tool profiles.", "加载网关配置后可调整工具模板。")}
               </div>
             `
           : nothing
@@ -1568,7 +1571,7 @@ function renderAgentTools(params: {
         hasAgentAllow
           ? html`
               <div class="callout info" style="margin-top: 12px">
-                This agent is using an explicit allowlist in config. Tool overrides are managed in the Config tab.
+                ${t("This agent is using an explicit allowlist in config. Tool overrides are managed in the Config tab.", "该 Agent 使用了显式 allowlist。工具覆盖请在配置页管理。")}
               </div>
             `
           : nothing
@@ -1577,7 +1580,7 @@ function renderAgentTools(params: {
         hasGlobalAllow
           ? html`
               <div class="callout info" style="margin-top: 12px">
-                Global tools.allow is set. Agent overrides cannot enable tools that are globally blocked.
+                ${t("Global tools.allow is set. Agent overrides cannot enable tools that are globally blocked.", "已设置全局 tools.allow。Agent 覆盖不能启用被全局禁用的工具。")}
               </div>
             `
           : nothing
@@ -1585,19 +1588,19 @@ function renderAgentTools(params: {
 
       <div class="agent-tools-meta" style="margin-top: 16px;">
         <div class="agent-kv">
-          <div class="label">Profile</div>
+          <div class="label">${t("Profile", "模板")}</div>
           <div class="mono">${profile}</div>
         </div>
         <div class="agent-kv">
-          <div class="label">Source</div>
+          <div class="label">${t("Source", "来源")}</div>
           <div>${profileSource}</div>
         </div>
         ${
           params.configDirty
             ? html`
                 <div class="agent-kv">
-                  <div class="label">Status</div>
-                  <div class="mono">unsaved</div>
+                  <div class="label">${t("Status", "状态")}</div>
+                  <div class="mono">${t("unsaved", "未保存")}</div>
                 </div>
               `
             : nothing
@@ -1605,7 +1608,7 @@ function renderAgentTools(params: {
       </div>
 
       <div class="agent-tools-presets" style="margin-top: 16px;">
-        <div class="label">Quick Presets</div>
+        <div class="label">${t("Quick Presets", "快速预设")}</div>
         <div class="agent-tools-buttons">
           ${PROFILE_OPTIONS.map(
             (option) => html`
@@ -1623,7 +1626,7 @@ function renderAgentTools(params: {
             ?disabled=${!editable}
             @click=${() => params.onProfileChange(params.agentId, null, false)}
           >
-            Inherit
+            ${t("Inherit", "继承")}
           </button>
         </div>
       </div>
@@ -1746,35 +1749,35 @@ function renderAgentSkills(params: {
     <section class="card">
       <div class="row" style="justify-content: space-between;">
         <div>
-          <div class="card-title">Skills</div>
+          <div class="card-title">${t("Skills", "技能")}</div>
           <div class="card-sub">
-            Per-agent skill allowlist and workspace skills.
+            ${t("Per-agent skill allowlist and workspace skills.", "按 Agent 维度的技能白名单与工作区技能。")}
             ${totalCount > 0 ? html`<span class="mono">${enabledCount}/${totalCount}</span>` : nothing}
           </div>
         </div>
         <div class="row" style="gap: 8px;">
           <button class="btn btn--sm" ?disabled=${!editable} @click=${() => params.onClear(params.agentId)}>
-            Use All
+            ${t("Use All", "全部使用")}
           </button>
           <button class="btn btn--sm" ?disabled=${!editable} @click=${() => params.onDisableAll(params.agentId)}>
-            Disable All
+            ${t("Disable All", "全部禁用")}
           </button>
           <button
             class="btn btn--sm"
             ?disabled=${params.configLoading}
             @click=${params.onConfigReload}
           >
-            Reload Config
+            ${t("Reload Config", "重新加载配置")}
           </button>
           <button class="btn btn--sm" ?disabled=${params.loading} @click=${params.onRefresh}>
-            ${params.loading ? "Loading…" : "Refresh"}
+            ${params.loading ? t("Loading…", "加载中…") : t("Refresh", "刷新")}
           </button>
           <button
             class="btn btn--sm primary"
             ?disabled=${params.configSaving || !params.configDirty}
             @click=${params.onConfigSave}
           >
-            ${params.configSaving ? "Saving…" : "Save"}
+            ${params.configSaving ? t("Saving…", "保存中…") : t("Save", "保存")}
           </button>
         </div>
       </div>
@@ -1783,7 +1786,7 @@ function renderAgentSkills(params: {
         !params.configForm
           ? html`
               <div class="callout info" style="margin-top: 12px">
-                Load the gateway config to set per-agent skills.
+                ${t("Load the gateway config to set per-agent skills.", "加载网关配置后可设置按 Agent 的技能。")}
               </div>
             `
           : nothing
@@ -1791,11 +1794,11 @@ function renderAgentSkills(params: {
       ${
         usingAllowlist
           ? html`
-              <div class="callout info" style="margin-top: 12px">This agent uses a custom skill allowlist.</div>
+              <div class="callout info" style="margin-top: 12px">${t("This agent uses a custom skill allowlist.", "该 Agent 使用自定义技能白名单。")}</div>
             `
           : html`
               <div class="callout info" style="margin-top: 12px">
-                All skills are enabled. Disabling any skill will create a per-agent allowlist.
+                ${t("All skills are enabled. Disabling any skill will create a per-agent allowlist.", "当前全部技能已启用，禁用任一技能将创建按 Agent 的白名单。")}
               </div>
             `
       }
@@ -1803,7 +1806,7 @@ function renderAgentSkills(params: {
         !reportReady && !params.loading
           ? html`
               <div class="callout info" style="margin-top: 12px">
-                Load skills for this agent to view workspace-specific entries.
+                ${t("Load skills for this agent to view workspace-specific entries.", "加载该 Agent 的技能后可查看工作区专属条目。")}
               </div>
             `
           : nothing
@@ -1816,20 +1819,20 @@ function renderAgentSkills(params: {
 
       <div class="filters" style="margin-top: 14px;">
         <label class="field" style="flex: 1;">
-          <span>Filter</span>
+          <span>${t("Filter", "筛选")}</span>
           <input
             .value=${params.filter}
             @input=${(e: Event) => params.onFilterChange((e.target as HTMLInputElement).value)}
-            placeholder="Search skills"
+            placeholder=${t("Search skills", "搜索技能")}
           />
         </label>
-        <div class="muted">${filtered.length} shown</div>
+        <div class="muted">${filtered.length} ${t("shown", "已显示")}</div>
       </div>
 
       ${
         filtered.length === 0
           ? html`
-              <div class="muted" style="margin-top: 16px">No skills found.</div>
+              <div class="muted" style="margin-top: 16px">${t("No skills found.", "未找到技能。")}</div>
             `
           : html`
               <div class="agent-skills-groups" style="margin-top: 16px;">

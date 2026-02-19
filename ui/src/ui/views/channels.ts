@@ -15,6 +15,7 @@ import type {
 } from "../types.ts";
 import type { ChannelKey, ChannelsChannelData, ChannelsProps } from "./channels.types.ts";
 import { formatAgo } from "../format.ts";
+import { t } from "../i18n.ts";
 import { renderChannelConfigSection } from "./channels.config.ts";
 import { renderDiscordCard } from "./channels.discord.ts";
 import { renderGoogleChatCard } from "./channels.googlechat.ts";
@@ -70,10 +71,10 @@ export function renderChannels(props: ChannelsProps) {
     <section class="card" style="margin-top: 18px;">
       <div class="row" style="justify-content: space-between;">
         <div>
-          <div class="card-title">Channel health</div>
-          <div class="card-sub">Channel status snapshots from the gateway.</div>
+          <div class="card-title">${t("Channel health", "通道健康")}</div>
+          <div class="card-sub">${t("Channel status snapshots from the gateway.", "来自网关的通道状态快照。")}</div>
         </div>
-        <div class="muted">${props.lastSuccessAt ? formatAgo(props.lastSuccessAt) : "n/a"}</div>
+        <div class="muted">${props.lastSuccessAt ? formatAgo(props.lastSuccessAt) : t("n/a", "暂无")}</div>
       </div>
       ${
         props.lastError
@@ -83,7 +84,7 @@ export function renderChannels(props: ChannelsProps) {
           : nothing
       }
       <pre class="code-block" style="margin-top: 12px;">
-${props.snapshot ? JSON.stringify(props.snapshot, null, 2) : "No snapshot yet."}
+${props.snapshot ? JSON.stringify(props.snapshot, null, 2) : t("No snapshot yet.", "暂无快照。")}
       </pre>
     </section>
   `;
@@ -194,7 +195,7 @@ function renderGenericChannelCard(
   return html`
     <div class="card">
       <div class="card-title">${label}</div>
-      <div class="card-sub">Channel status and configuration.</div>
+      <div class="card-sub">${t("Channel status and configuration.", "通道状态与配置。")}</div>
       ${accountCountLabel}
 
       ${
@@ -207,16 +208,16 @@ function renderGenericChannelCard(
           : html`
             <div class="status-list" style="margin-top: 16px;">
               <div>
-                <span class="label">Configured</span>
-                <span>${configured == null ? "n/a" : configured ? "Yes" : "No"}</span>
+                <span class="label">${t("Configured", "已配置")}</span>
+                <span>${configured == null ? t("n/a", "暂无") : configured ? t("Yes", "是") : t("No", "否")}</span>
               </div>
               <div>
-                <span class="label">Running</span>
-                <span>${running == null ? "n/a" : running ? "Yes" : "No"}</span>
+                <span class="label">${t("Running", "运行中")}</span>
+                <span>${running == null ? t("n/a", "暂无") : running ? t("Yes", "是") : t("No", "否")}</span>
               </div>
               <div>
-                <span class="label">Connected</span>
-                <span>${connected == null ? "n/a" : connected ? "Yes" : "No"}</span>
+                <span class="label">${t("Connected", "已连接")}</span>
+                <span>${connected == null ? t("n/a", "暂无") : connected ? t("Yes", "是") : t("No", "否")}</span>
               </div>
             </div>
           `
@@ -286,6 +287,20 @@ function deriveConnectedStatus(account: ChannelAccountSnapshot): "Yes" | "No" | 
 function renderGenericAccount(account: ChannelAccountSnapshot) {
   const runningStatus = deriveRunningStatus(account);
   const connectedStatus = deriveConnectedStatus(account);
+  const runningLabel =
+    runningStatus === "Yes"
+      ? t("Yes", "是")
+      : runningStatus === "No"
+        ? t("No", "否")
+        : t("Active", "活跃");
+  const connectedLabel =
+    connectedStatus === "Yes"
+      ? t("Yes", "是")
+      : connectedStatus === "No"
+        ? t("No", "否")
+        : connectedStatus === "Active"
+          ? t("Active", "活跃")
+          : t("n/a", "暂无");
 
   return html`
     <div class="account-card">
@@ -295,20 +310,20 @@ function renderGenericAccount(account: ChannelAccountSnapshot) {
       </div>
       <div class="status-list account-card-status">
         <div>
-          <span class="label">Running</span>
-          <span>${runningStatus}</span>
+          <span class="label">${t("Running", "运行中")}</span>
+          <span>${runningLabel}</span>
         </div>
         <div>
-          <span class="label">Configured</span>
-          <span>${account.configured ? "Yes" : "No"}</span>
+          <span class="label">${t("Configured", "已配置")}</span>
+          <span>${account.configured ? t("Yes", "是") : t("No", "否")}</span>
         </div>
         <div>
-          <span class="label">Connected</span>
-          <span>${connectedStatus}</span>
+          <span class="label">${t("Connected", "已连接")}</span>
+          <span>${connectedLabel}</span>
         </div>
         <div>
-          <span class="label">Last inbound</span>
-          <span>${account.lastInboundAt ? formatAgo(account.lastInboundAt) : "n/a"}</span>
+          <span class="label">${t("Last inbound", "最近入站")}</span>
+          <span>${account.lastInboundAt ? formatAgo(account.lastInboundAt) : t("n/a", "暂无")}</span>
         </div>
         ${
           account.lastError

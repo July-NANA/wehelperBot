@@ -60,7 +60,7 @@ export function renderLogs(props: LogsProps) {
     <section class="card">
       <div class="row" style="justify-content: space-between;">
         <div>
-          <div class="card-title">Logs</div>
+          <div class="card-title">${t("Logs", "日志")}</div>
           <div class="card-sub">${t("Gateway file logs (JSONL).", "网关文件日志（JSONL）。")}</div>
         </div>
         <div class="row" style="gap: 8px;">

@@ -94,7 +94,7 @@ declare global {
     basePath?: string;
   }
 
-  interface WehelperDesktopBridge {
+  interface LingshiDesktopBridge {
     version: string;
     desktopBootstrap?: OpenclawDesktopBootstrap;
   }
@@ -102,13 +102,17 @@ declare global {
   interface Window {
     __OPENCLAW_CONTROL_UI_BASE_PATH__?: string;
     __OPENCLAW_DESKTOP_BOOTSTRAP__?: OpenclawDesktopBootstrap;
-    wehelperDesktop?: WehelperDesktopBridge;
+    lingshiDesktop?: LingshiDesktopBridge;
+    wehelperDesktop?: LingshiDesktopBridge;
   }
 }
 
 const injectedAssistantIdentity = resolveInjectedAssistantIdentity();
 const desktopBootstrap =
-  window.__OPENCLAW_DESKTOP_BOOTSTRAP__ ?? window.wehelperDesktop?.desktopBootstrap ?? null;
+  window.__OPENCLAW_DESKTOP_BOOTSTRAP__ ??
+  window.lingshiDesktop?.desktopBootstrap ??
+  window.wehelperDesktop?.desktopBootstrap ??
+  null;
 
 function resolveOnboardingMode(): boolean {
   if (!window.location.search) {

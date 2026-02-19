@@ -51,6 +51,7 @@ import {
   updateSkillEdit,
   updateSkillEnabled,
 } from "./controllers/skills.ts";
+import { tr } from "./i18n.ts";
 import { icons } from "./icons.ts";
 import { normalizeBasePath, TAB_GROUPS, subtitleForTab, titleForTab } from "./navigation.ts";
 import { ConfigUiHints } from "./types.ts";
@@ -95,7 +96,7 @@ export function renderApp(state: AppViewState) {
   const presenceCount = state.presenceEntries.length;
   const sessionsCount = state.sessionsResult?.count ?? null;
   const cronNext = state.cronStatus?.nextWakeAtMs ?? null;
-  const chatDisabledReason = state.connected ? null : "Disconnected from gateway.";
+  const chatDisabledReason = state.connected ? null : tr("shell.chat.disconnected");
   const isChat = state.tab === "chat";
   const startupLockActive =
     state.desktopStartupLockEnabled && !state.desktopStartupUnlockedOnce && isChat;
@@ -106,10 +107,10 @@ export function renderApp(state: AppViewState) {
   const logoBase = normalizeBasePath(state.basePath);
   const logoHref =
     typeof window !== "undefined" && window.location.protocol === "file:"
-      ? "./favicon.svg"
+      ? "./lingshi-logo.png"
       : logoBase
-        ? `${logoBase}/favicon.svg`
-        : "/favicon.svg";
+        ? `${logoBase}/lingshi-logo.png`
+        : "/lingshi-logo.png";
   const configValue =
     state.configForm ?? (state.configSnapshot?.config as Record<string, unknown> | null);
   const resolvedAgentId =
@@ -183,26 +184,34 @@ export function renderApp(state: AppViewState) {
                 ...state.settings,
                 navCollapsed: !state.settings.navCollapsed,
               })}
-            title="${state.settings.navCollapsed ? "Expand sidebar" : "Collapse sidebar"}"
-            aria-label="${state.settings.navCollapsed ? "Expand sidebar" : "Collapse sidebar"}"
+            aria-label="${
+              state.settings.navCollapsed
+                ? tr("shell.nav.expandSidebar")
+                : tr("shell.nav.collapseSidebar")
+            }"
+            title="${
+              state.settings.navCollapsed
+                ? tr("shell.nav.expandSidebar")
+                : tr("shell.nav.collapseSidebar")
+            }"
           >
             <span class="nav-collapse-toggle__icon">${icons.menu}</span>
           </button>
           <div class="brand">
             <div class="brand-logo">
-              <img src="${logoHref}" alt="wehelper" />
+              <img src="${logoHref}" alt="灵识 Lingshi" />
             </div>
             <div class="brand-text">
-              <div class="brand-title">WEHELPER</div>
-              <div class="brand-sub">Gateway Dashboard</div>
+              <div class="brand-title">灵识 LINGSHI</div>
+              <div class="brand-sub">${tr("shell.brand.subtitle")}</div>
             </div>
           </div>
         </div>
         <div class="topbar-status">
           <div class="pill">
             <span class="statusDot ${state.connected ? "ok" : ""}"></span>
-            <span>Health</span>
-            <span class="mono">${state.connected ? "OK" : "Offline"}</span>
+            <span>${tr("shell.status.health")}</span>
+            <span class="mono">${state.connected ? tr("shell.status.ok") : tr("shell.status.offline")}</span>
           </div>
           ${renderThemeToggle(state)}
         </div>
@@ -236,7 +245,7 @@ export function renderApp(state: AppViewState) {
         })}
         <div class="nav-group nav-group--links">
           <div class="nav-label nav-label--static">
-            <span class="nav-label__text">Resources</span>
+            <span class="nav-label__text">${tr("shell.resources")}</span>
           </div>
           <div class="nav-group__items">
             <a
@@ -244,10 +253,10 @@ export function renderApp(state: AppViewState) {
               href="https://docs.openclaw.ai"
               target="_blank"
               rel="noreferrer"
-              title="Docs (opens in new tab)"
+              title=${tr("shell.docs.openInNewTab")}
             >
               <span class="nav-item__icon" aria-hidden="true">${icons.book}</span>
-              <span class="nav-item__text">Docs</span>
+              <span class="nav-item__text">${tr("shell.docs")}</span>
             </a>
           </div>
         </div>

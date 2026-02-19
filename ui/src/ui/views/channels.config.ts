@@ -1,6 +1,7 @@
 import { html } from "lit";
 import type { ConfigUiHints } from "../types.ts";
 import type { ChannelsProps } from "./channels.types.ts";
+import { t } from "../i18n.ts";
 import { analyzeConfigSchema, renderNode, schemaType, type JsonSchema } from "./config-form.ts";
 
 type ChannelConfigFormProps = {
@@ -67,7 +68,7 @@ const EXTRA_CHANNEL_FIELDS = ["groupPolicy", "streamMode", "dmPolicy"] as const;
 
 function formatExtraValue(raw: unknown): string {
   if (raw == null) {
-    return "n/a";
+    return t("n/a", "暂无");
   }
   if (typeof raw === "string" || typeof raw === "number" || typeof raw === "boolean") {
     return String(raw);
@@ -75,7 +76,7 @@ function formatExtraValue(raw: unknown): string {
   try {
     return JSON.stringify(raw);
   } catch {
-    return "n/a";
+    return t("n/a", "暂无");
   }
 }
 
@@ -108,13 +109,13 @@ export function renderChannelConfigForm(props: ChannelConfigFormProps) {
   const normalized = analysis.schema;
   if (!normalized) {
     return html`
-      <div class="callout danger">Schema unavailable. Use Raw.</div>
+      <div class="callout danger">${t("Schema unavailable. Use Raw.", "Schema 不可用，请使用原始模式。")}</div>
     `;
   }
   const node = resolveSchemaNode(normalized, ["channels", props.channelId]);
   if (!node) {
     return html`
-      <div class="callout danger">Channel config schema unavailable.</div>
+      <div class="callout danger">${t("Channel config schema unavailable.", "通道配置 Schema 不可用。")}</div>
     `;
   }
   const configValue = props.configValue ?? {};
@@ -144,7 +145,7 @@ export function renderChannelConfigSection(params: { channelId: string; props: C
       ${
         props.configSchemaLoading
           ? html`
-              <div class="muted">Loading config schema…</div>
+              <div class="muted">${t("Loading config schema…", "加载配置 Schema…")}</div>
             `
           : renderChannelConfigForm({
               channelId,
@@ -161,14 +162,14 @@ export function renderChannelConfigSection(params: { channelId: string; props: C
           ?disabled=${disabled || !props.configFormDirty}
           @click=${() => props.onConfigSave()}
         >
-          ${props.configSaving ? "Saving…" : "Save"}
+          ${props.configSaving ? t("Saving…", "保存中…") : t("Save", "保存")}
         </button>
         <button
           class="btn"
           ?disabled=${disabled}
           @click=${() => props.onConfigReload()}
         >
-          Reload
+          ${t("Reload", "重新加载")}
         </button>
       </div>
     </div>

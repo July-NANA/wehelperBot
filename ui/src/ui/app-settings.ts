@@ -62,7 +62,8 @@ function readDesktopBootstrap(): {
     return null;
   }
   const fromGlobal = window.__OPENCLAW_DESKTOP_BOOTSTRAP__;
-  const fromBridge = window.wehelperDesktop?.desktopBootstrap;
+  const fromBridge =
+    window.lingshiDesktop?.desktopBootstrap ?? window.wehelperDesktop?.desktopBootstrap;
   const candidate = fromGlobal ?? fromBridge;
   if (!candidate) {
     return null;

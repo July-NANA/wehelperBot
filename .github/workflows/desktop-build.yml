@@ -8,7 +8,7 @@ on:
       - feature/phase3
     paths:
       - ".github/workflows/desktop-build.yml"
-      - "wehelperDesktop/**"
+      - "lingshi_desktop/**"
 
 jobs:
   build-desktop:
@@ -51,16 +51,20 @@ jobs:
         id: desktop
         run: |
           set -euo pipefail
-          if [ -f "wehelperDesktop/package.json" ]; then
+          if [ -f "lingshi_desktop/package.json" ]; then
+            echo "dir=lingshi_desktop" >> "$GITHUB_OUTPUT"
+          elif [ -f "wehelperDesktop/package.json" ]; then
             echo "dir=wehelperDesktop" >> "$GITHUB_OUTPUT"
+          elif [ -f "../lingshi_desktop/package.json" ]; then
+            echo "dir=../lingshi_desktop" >> "$GITHUB_OUTPUT"
           elif [ -f "../wehelperDesktop/package.json" ]; then
             echo "dir=../wehelperDesktop" >> "$GITHUB_OUTPUT"
           else
-            echo "Cannot find wehelperDesktop/package.json"
+            echo "Cannot find lingshi_desktop/package.json or legacy wehelperDesktop/package.json"
             exit 1
           fi
 
-      - name: Install wehelperBot dependencies (for bundled runtime)
+      - name: Install lingshi_bot dependencies (for bundled runtime)
         run: |
           set -euo pipefail
           pnpm install --frozen-lockfile
@@ -83,6 +87,6 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: wehelperDesktop-${{ matrix.target }}-${{ github.run_id }}
+          name: lingshi_desktop-${{ matrix.target }}-${{ github.run_id }}
           path: ${{ steps.desktop.outputs.dir }}/dist/${{ matrix.artifact_glob }}
           if-no-files-found: error

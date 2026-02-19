@@ -10,7 +10,7 @@ import {
   renderStreamingGroup,
 } from "../chat/grouped-render.ts";
 import { normalizeMessage, normalizeRoleForGrouping } from "../chat/message-normalizer.ts";
-import { t } from "../i18n.ts";
+import { tr } from "../i18n.ts";
 import { icons } from "../icons.ts";
 import { renderMarkdownSidebar } from "./markdown-sidebar.ts";
 import "../components/resizable-divider.ts";
@@ -88,7 +88,7 @@ function renderCompactionIndicator(status: CompactionIndicatorStatus | null | un
   if (status.active) {
     return html`
       <div class="callout info compaction-indicator compaction-indicator--active">
-        ${icons.loader} Compacting context...
+        ${icons.loader} ${tr("chat.compacting")}
       </div>
     `;
   }
@@ -99,7 +99,7 @@ function renderCompactionIndicator(status: CompactionIndicatorStatus | null | un
     if (elapsed < COMPACTION_TOAST_DURATION_MS) {
       return html`
         <div class="callout success compaction-indicator compaction-indicator--complete">
-          ${icons.check} Context compacted
+          ${icons.check} ${tr("chat.compacted")}
         </div>
       `;
     }
@@ -166,13 +166,13 @@ function renderAttachmentPreview(props: ChatProps) {
           <div class="chat-attachment">
             <img
               src=${att.dataUrl}
-              alt="Attachment preview"
+              alt=${tr("chat.attachment.preview")}
               class="chat-attachment__img"
             />
             <button
               class="chat-attachment__remove"
               type="button"
-              aria-label="Remove attachment"
+              aria-label=${tr("chat.attachment.remove")}
               @click=${() => {
                 const next = (props.attachments ?? []).filter((a) => a.id !== att.id);
                 props.onAttachmentsChange?.(next);
@@ -203,12 +203,9 @@ export function renderChat(props: ChatProps) {
   const hasAttachments = (props.attachments?.length ?? 0) > 0;
   const composePlaceholder = props.connected
     ? hasAttachments
-      ? t("Add a message or paste more images...", "输入消息或继续粘贴图片…")
-      : t(
-          "Message (↩ to send, Shift+↩ for line breaks, paste images)",
-          "输入消息（↩ 发送，Shift+↩ 换行，可直接粘贴图片）",
-        )
-    : t("Connect to the gateway to start chatting…", "连接网关后开始对话…");
+      ? tr("chat.placeholder.withImages")
+      : tr("chat.placeholder.default")
+    : tr("chat.placeholder.disconnected");
 
   const splitRatio = props.splitRatio ?? 0.6;
   const sidebarOpen = Boolean(props.sidebarOpen && props.onCloseSidebar);
@@ -222,7 +219,7 @@ export function renderChat(props: ChatProps) {
       ${
         props.loading
           ? html`
-              <div class="muted">Loading chat…</div>
+              <div class="muted">${tr("chat.loading")}</div>
             `
           : nothing
       }
@@ -267,12 +264,12 @@ export function renderChat(props: ChatProps) {
                 class="chat-startup-overlay"
                 role="status"
                 aria-live="polite"
-                aria-label=${t("Gateway is starting, please wait", "网关启动中，请稍候")}
+                aria-label=${tr("chat.startingGateway")}
               >
                 <div class="chat-startup-overlay__panel">
                   <span class="chat-startup-overlay__spinner" aria-hidden="true">${icons.loader}</span>
                   <div class="chat-startup-overlay__text">
-                    ${t("Gateway is starting, please wait", "网关启动中，请稍候")}
+                    ${tr("chat.startingGateway")}
                   </div>
                 </div>
               </div>
@@ -293,8 +290,8 @@ export function renderChat(props: ChatProps) {
               class="chat-focus-exit"
               type="button"
               @click=${props.onToggleFocusMode}
-              aria-label="Exit focus mode"
-              title="Exit focus mode"
+              aria-label=${tr("chat.exitFocus")}
+              title=${tr("chat.exitFocus")}
             >
               ${icons.x}
             </button>
@@ -341,7 +338,7 @@ export function renderChat(props: ChatProps) {
         props.queue.length
           ? html`
             <div class="chat-queue" role="status" aria-live="polite">
-              <div class="chat-queue__title">${t("Queued", "队列")} (${props.queue.length})</div>
+              <div class="chat-queue__title">${tr("chat.queued")} (${props.queue.length})</div>
               <div class="chat-queue__list">
                 ${props.queue.map(
                   (item) => html`
@@ -350,17 +347,14 @@ export function renderChat(props: ChatProps) {
                         ${
                           item.text ||
                           (item.attachments?.length
-                            ? t(
-                                `Image (${item.attachments.length})`,
-                                `图片（${item.attachments.length}）`,
-                              )
+                            ? tr("chat.queue.imageCount", { count: item.attachments.length })
                             : "")
                         }
                       </div>
                       <button
                         class="btn chat-queue__remove"
                         type="button"
-                        aria-label=${t("Remove queued message", "移除队列消息")}
+                        aria-label=${tr("chat.queue.remove")}
                         @click=${() => props.onQueueRemove(item.id)}
                       >
                         ${icons.x}
@@ -382,7 +376,7 @@ export function renderChat(props: ChatProps) {
               type="button"
               @click=${props.onScrollToBottom}
             >
-              ${t("New messages", "新消息")} ${icons.arrowDown}
+              ${tr("chat.newMessages")} ${icons.arrowDown}
             </button>
           `
           : nothing
@@ -392,7 +386,7 @@ export function renderChat(props: ChatProps) {
         ${renderAttachmentPreview(props)}
         <div class="chat-compose__row">
           <label class="field chat-compose__field">
-            <span>${t("Message", "消息")}</span>
+            <span>${tr("chat.message")}</span>
             <textarea
               ${ref((el) => el && adjustTextareaHeight(el as HTMLTextAreaElement))}
               .value=${props.draft}
@@ -430,14 +424,14 @@ export function renderChat(props: ChatProps) {
               ?disabled=${startupLocked || !props.connected || (!canAbort && props.sending)}
               @click=${canAbort ? props.onAbort : props.onNewSession}
             >
-              ${canAbort ? t("Stop", "停止") : t("New session", "新会话")}
+              ${canAbort ? tr("common.stop") : tr("chat.newSession")}
             </button>
             <button
               class="btn primary"
               ?disabled=${startupLocked || !props.connected}
               @click=${props.onSend}
             >
-              ${isBusy ? t("Queue", "加入队列") : t("Send", "发送")}<kbd class="btn-kbd">↵</kbd>
+              ${isBusy ? tr("chat.queue") : tr("chat.send")}<kbd class="btn-kbd">↵</kbd>
             </button>
           </div>
         </div>

@@ -1,5 +1,6 @@
 packages:
   - .
+  - lingshi_desktop
   - ui
   - packages/*
   - extensions/*
@@ -9,6 +10,7 @@ onlyBuiltDependencies:
   - "@lydell/node-pty"
   - "@matrix-org/matrix-sdk-crypto-nodejs"
   - authenticate-pam
+  - electron
   - esbuild
   - protobufjs
   - sharp

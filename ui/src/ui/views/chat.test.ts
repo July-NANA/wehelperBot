@@ -104,7 +104,7 @@ describe("chat view", () => {
       container,
     );
 
-    expect(container.textContent).toContain("网关启动中，请稍候");
+    expect(container.textContent).toMatch(/网关启动中，请稍候|Gateway is starting, please wait/);
     const textarea = container.querySelector("textarea");
     expect(textarea?.hasAttribute("disabled")).toBe(true);
   });

@@ -1,8 +1,8 @@
-# 启动脚本说明（Wehelper / OpenClaw）
+# 启动脚本说明（灵识 Lingshi）
 
-本目录提供 4 个脚本：
+本目录提供 4 个脚本（位于 `lingshi_bot/scripts/startup/`）：
 
-- `setup_wehelper.(sh|ps1)`：一键安装/构建并前台启动网关
+- `setup_wehelper.(sh|ps1)`：一键安装/构建并前台启动网关（历史命名，P4 兼容保留）
 - `configure_provider.(sh|ps1)`：仅配置模型 Provider（API Key 或 OAuth），不启动网关
 
 适用场景：
@@ -17,26 +17,26 @@
 ### macOS / Linux
 
 ```bash
-./openclaw/scripts/startup/setup_wehelper.sh
+./scripts/startup/setup_wehelper.sh
 ```
 
 如果项目目录改名或路径含空格：
 
 ```bash
-OPENCLAW_ROOT="/path/with spaces/wehelperBot/openclaw" ./openclaw/scripts/startup/setup_wehelper.sh
+OPENCLAW_ROOT="/path/with spaces/lingshi_project/lingshi_bot" ./scripts/startup/setup_wehelper.sh
 ```
 
 ### Windows (PowerShell)
 
 ```powershell
-.\openclaw\scripts\startup\setup_wehelper.ps1
+.\scripts\startup\setup_wehelper.ps1
 ```
 
 如果项目目录改名或路径含空格：
 
 ```powershell
-$env:OPENCLAW_ROOT="D:\Desktop\New folder\wehelperBot\openclaw"
-.\openclaw\scripts\startup\setup_wehelper.ps1
+$env:OPENCLAW_ROOT="D:\Desktop\New folder\lingshi_project\lingshi_bot"
+.\scripts\startup\setup_wehelper.ps1
 ```
 
 启动后会打印网关 token，例如：
@@ -65,13 +65,13 @@ http://127.0.0.1:18789/
 #### macOS / Linux
 
 ```bash
-./openclaw/scripts/startup/configure_provider.sh
+./scripts/startup/configure_provider.sh
 ```
 
 #### Windows (PowerShell)
 
 ```powershell
-.\openclaw\scripts\startup\configure_provider.ps1
+.\scripts\startup\configure_provider.ps1
 ```
 
 说明：
@@ -82,13 +82,13 @@ http://127.0.0.1:18789/
 ### 2) 启动网关
 
 ```bash
-./openclaw/scripts/startup/setup_wehelper.sh
+./scripts/startup/setup_wehelper.sh
 ```
 
 或（Windows）：
 
 ```powershell
-.\openclaw\scripts\startup\setup_wehelper.ps1
+.\scripts\startup\setup_wehelper.ps1
 ```
 
 ---
@@ -98,7 +98,7 @@ http://127.0.0.1:18789/
 ### macOS / Linux
 
 ```bash
-./openclaw/scripts/startup/setup_wehelper.sh [--port <port>] [--skip-build] [--token <token>]
+./scripts/startup/setup_wehelper.sh [--port <port>] [--skip-build] [--token <token>]
 ```
 
 参数：
@@ -116,7 +116,7 @@ http://127.0.0.1:18789/
 ### Windows (PowerShell)
 
 ```powershell
-.\openclaw\scripts\startup\setup_wehelper.ps1 -Port 18789 -Token "<token>" [-SkipBuild]
+.\scripts\startup\setup_wehelper.ps1 -Port 18789 -Token "<token>" [-SkipBuild]
 ```
 
 ---
@@ -126,7 +126,7 @@ http://127.0.0.1:18789/
 ### macOS / Linux
 
 ```bash
-./openclaw/scripts/startup/configure_provider.sh \
+./scripts/startup/configure_provider.sh \
   [--provider <id>] [--auth <token|api-key|oauth>] \
   [--api-key <key>] [--token <token>] [--force]
 ```
@@ -134,7 +134,7 @@ http://127.0.0.1:18789/
 ### Windows (PowerShell)
 
 ```powershell
-.\openclaw\scripts\startup\configure_provider.ps1 \
+.\scripts\startup\configure_provider.ps1 \
   -Provider <id> -Auth <token|api-key|oauth> \
   -ApiKey <key> -Token <token> [-Force]
 ```
@@ -149,8 +149,8 @@ http://127.0.0.1:18789/
 示例：
 
 ```bash
-./openclaw/scripts/startup/configure_provider.sh --provider openai --auth api-key --api-key "<key>"
-./openclaw/scripts/startup/configure_provider.sh --provider qwen-portal --auth oauth
+./scripts/startup/configure_provider.sh --provider openai --auth api-key --api-key "<key>"
+./scripts/startup/configure_provider.sh --provider qwen-portal --auth oauth
 ```
 
 ---
@@ -164,7 +164,7 @@ http://127.0.0.1:18789/
 
 ### 4) 项目目录改名或路径包含空格
 
-- 设置 `OPENCLAW_ROOT` 指向 **OpenClaw 目录**（包含 `package.json` 的目录）
+- 设置 `OPENCLAW_ROOT` 指向 **lingshi_bot 根目录**（包含 `package.json` 的目录）
 
 ### 2) token mismatch
 

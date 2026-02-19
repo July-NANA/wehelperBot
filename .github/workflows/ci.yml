@@ -81,6 +81,9 @@ jobs:
             task: test
             command: pnpm canvas:a2ui:bundle && pnpm test
           - runtime: node
+            task: i18n-check (warning)
+            command: pnpm --filter openclaw-control-ui i18n:check || true
+          - runtime: node
             task: protocol
             command: pnpm protocol:check
           - runtime: node
@@ -199,6 +202,9 @@ jobs:
           - runtime: node
             task: test
             command: pnpm canvas:a2ui:bundle && pnpm test
+          - runtime: node
+            task: i18n-check (warning)
+            command: pnpm --filter openclaw-control-ui i18n:check || true
           - runtime: node
             task: protocol
             command: pnpm protocol:check

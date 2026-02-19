@@ -1,6 +1,7 @@
 import { html, nothing } from "lit";
 import type { GatewaySessionRow, SessionsListResult } from "../types.ts";
 import { formatAgo } from "../format.ts";
+import { t } from "../i18n.ts";
 import { pathForTab } from "../navigation.ts";
 import { formatSessionTokens } from "../presenter.ts";
 
@@ -35,9 +36,9 @@ export type SessionsProps = {
 const THINK_LEVELS = ["", "off", "minimal", "low", "medium", "high"] as const;
 const BINARY_THINK_LEVELS = ["", "off", "on"] as const;
 const VERBOSE_LEVELS = [
-  { value: "", label: "inherit" },
-  { value: "off", label: "off (explicit)" },
-  { value: "on", label: "on" },
+  { value: "", label: t("inherit", "继承") },
+  { value: "off", label: t("off (explicit)", "关闭（显式）") },
+  { value: "on", label: t("on", "开启") },
 ] as const;
 const REASONING_LEVELS = ["", "off", "on", "stream"] as const;
 
@@ -89,17 +90,17 @@ export function renderSessions(props: SessionsProps) {
     <section class="card">
       <div class="row" style="justify-content: space-between;">
         <div>
-          <div class="card-title">Sessions</div>
-          <div class="card-sub">Active session keys and per-session overrides.</div>
+          <div class="card-title">${t("Sessions", "会话")}</div>
+          <div class="card-sub">${t("Active session keys and per-session overrides.", "活跃会话键与按会话覆盖设置。")}</div>
         </div>
         <button class="btn" ?disabled=${props.loading} @click=${props.onRefresh}>
-          ${props.loading ? "Loading…" : "Refresh"}
+          ${props.loading ? t("Loading…", "加载中…") : t("Refresh", "刷新")}
         </button>
       </div>
 
       <div class="filters" style="margin-top: 14px;">
         <label class="field">
-          <span>Active within (minutes)</span>
+          <span>${t("Active within (minutes)", "活跃时间范围（分钟）")}</span>
           <input
             .value=${props.activeMinutes}
             @input=${(e: Event) =>
@@ -112,7 +113,7 @@ export function renderSessions(props: SessionsProps) {
           />
         </label>
         <label class="field">
-          <span>Limit</span>
+          <span>${t("Limit", "数量上限")}</span>
           <input
             .value=${props.limit}
             @input=${(e: Event) =>
@@ -125,7 +126,7 @@ export function renderSessions(props: SessionsProps) {
           />
         </label>
         <label class="field checkbox">
-          <span>Include global</span>
+          <span>${t("Include global", "包含全局")}</span>
           <input
             type="checkbox"
             .checked=${props.includeGlobal}
@@ -139,7 +140,7 @@ export function renderSessions(props: SessionsProps) {
           />
         </label>
         <label class="field checkbox">
-          <span>Include unknown</span>
+          <span>${t("Include unknown", "包含未知")}</span>
           <input
             type="checkbox"
             .checked=${props.includeUnknown}
@@ -161,25 +162,25 @@ export function renderSessions(props: SessionsProps) {
       }
 
       <div class="muted" style="margin-top: 12px;">
-        ${props.result ? `Store: ${props.result.path}` : ""}
+        ${props.result ? `${t("Store", "存储文件")}: ${props.result.path}` : ""}
       </div>
 
       <div class="table" style="margin-top: 16px;">
         <div class="table-head">
-          <div>Key</div>
-          <div>Label</div>
-          <div>Kind</div>
-          <div>Updated</div>
-          <div>Tokens</div>
-          <div>Thinking</div>
-          <div>Verbose</div>
-          <div>Reasoning</div>
-          <div>Actions</div>
+          <div>${t("Key", "键")}</div>
+          <div>${t("Label", "标签")}</div>
+          <div>${t("Kind", "类型")}</div>
+          <div>${t("Updated", "更新时间")}</div>
+          <div>${t("Tokens", "Token")}</div>
+          <div>${t("Thinking", "思考")}</div>
+          <div>${t("Verbose", "详细")}</div>
+          <div>${t("Reasoning", "推理")}</div>
+          <div>${t("Actions", "操作")}</div>
         </div>
         ${
           rows.length === 0
             ? html`
-                <div class="muted">No sessions found.</div>
+                <div class="muted">${t("No sessions found.", "未找到会话。")}</div>
               `
             : rows.map((row) =>
                 renderRow(row, props.basePath, props.onPatch, props.onDelete, props.loading),
@@ -197,7 +198,7 @@ function renderRow(
   onDelete: SessionsProps["onDelete"],
   disabled: boolean,
 ) {
-  const updated = row.updatedAt ? formatAgo(row.updatedAt) : "n/a";
+  const updated = row.updatedAt ? formatAgo(row.updatedAt) : t("n/a", "暂无");
   const rawThinking = row.thinkingLevel ?? "";
   const isBinaryThinking = isBinaryThinkingProvider(row.modelProvider);
   const thinking = resolveThinkLevelDisplay(rawThinking, isBinaryThinking);
@@ -219,7 +220,7 @@ function renderRow(
         <input
           .value=${row.label ?? ""}
           ?disabled=${disabled}
-          placeholder="(optional)"
+          placeholder=${t("(optional)", "（可选）")}
           @change=${(e: Event) => {
             const value = (e.target as HTMLInputElement).value.trim();
             onPatch(row.key, { label: value || null });
@@ -240,7 +241,7 @@ function renderRow(
             });
           }}
         >
-          ${thinkLevels.map((level) => html`<option value=${level}>${level || "inherit"}</option>`)}
+          ${thinkLevels.map((level) => html`<option value=${level}>${level || t("inherit", "继承")}</option>`)}
         </select>
       </div>
       <div>
@@ -267,13 +268,13 @@ function renderRow(
           }}
         >
           ${REASONING_LEVELS.map(
-            (level) => html`<option value=${level}>${level || "inherit"}</option>`,
+            (level) => html`<option value=${level}>${level || t("inherit", "继承")}</option>`,
           )}
         </select>
       </div>
       <div>
         <button class="btn danger" ?disabled=${disabled} @click=${() => onDelete(row.key)}>
-          Delete
+          ${t("Delete", "删除")}
         </button>
       </div>
     </div>
